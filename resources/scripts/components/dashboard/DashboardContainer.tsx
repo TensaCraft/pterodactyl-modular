@@ -13,6 +13,32 @@ import useSWR from 'swr';
 import { PaginatedResult } from '@/api/http';
 import Pagination from '@/components/elements/Pagination';
 import { useLocation } from 'react-router-dom';
+import dashboardRegistry from '@/modular/dashboardRegistry';
+import type { DashboardServerListProps } from '@/modular/routeTypes';
+
+const DefaultDashboardServerList = ({ servers, setPage, showOnlyAdmin, ServerRowComponent }: DashboardServerListProps) => {
+    if (!servers) {
+        return <Spinner centered size={'large'} />;
+    }
+
+    return (
+        <Pagination data={servers} onPageSelect={setPage}>
+            {({ items }) =>
+                items.length > 0 ? (
+                    items.map((server, index) => (
+                        <ServerRowComponent key={server.uuid} server={server} className={index > 0 ? 'mt-2' : undefined} />
+                    ))
+                ) : (
+                    <p css={tw`text-center text-sm text-neutral-400`}>
+                        {showOnlyAdmin
+                            ? 'There are no other servers to display.'
+                            : 'There are no servers associated with your account.'}
+                    </p>
+                )
+            }
+        </Pagination>
+    );
+};
 
 export default () => {
     const { search } = useLocation();
@@ -21,8 +47,9 @@ export default () => {
     const [page, setPage] = useState(!isNaN(defaultPage) && defaultPage > 0 ? defaultPage : 1);
     const { clearFlashes, clearAndAddHttpError } = useFlash();
     const uuid = useStoreState((state) => state.user.data!.uuid);
-    const rootAdmin = useStoreState((state) => state.user.data!.rootAdmin);
-    const [showOnlyAdmin, setShowOnlyAdmin] = usePersistedState(`${uuid}:show_all_servers`, false);
+    const rootAdmin = !!useStoreState((state) => state.user.data!.rootAdmin);
+    const [persistedShowOnlyAdmin, setShowOnlyAdmin] = usePersistedState(`${uuid}:show_all_servers`, false);
+    const showOnlyAdmin = !!persistedShowOnlyAdmin;
 
     const { data: servers, error } = useSWR<PaginatedResult<Server>>(
         ['/api/client/servers', showOnlyAdmin && rootAdmin, page],
@@ -52,6 +79,8 @@ export default () => {
         if (!error) clearFlashes('dashboard');
     }, [error]);
 
+    const DashboardServerList = dashboardRegistry.serverList ?? DefaultDashboardServerList;
+
     return (
         <PageContentBlock title={'Dashboard'} showFlashKey={'dashboard'}>
             {rootAdmin && (
@@ -66,25 +95,14 @@ export default () => {
                     />
                 </div>
             )}
-            {!servers ? (
-                <Spinner centered size={'large'} />
-            ) : (
-                <Pagination data={servers} onPageSelect={setPage}>
-                    {({ items }) =>
-                        items.length > 0 ? (
-                            items.map((server, index) => (
-                                <ServerRow key={server.uuid} server={server} css={index > 0 ? tw`mt-2` : undefined} />
-                            ))
-                        ) : (
-                            <p css={tw`text-center text-sm text-neutral-400`}>
-                                {showOnlyAdmin
-                                    ? 'There are no other servers to display.'
-                                    : 'There are no servers associated with your account.'}
-                            </p>
-                        )
-                    }
-                </Pagination>
-            )}
+            <DashboardServerList
+                servers={servers}
+                page={page}
+                setPage={setPage}
+                rootAdmin={rootAdmin}
+                showOnlyAdmin={showOnlyAdmin}
+                ServerRowComponent={ServerRow}
+            />
         </PageContentBlock>
     );
 };

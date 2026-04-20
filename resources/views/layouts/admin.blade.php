@@ -80,11 +80,28 @@
                                 <i class="fa fa-wrench"></i> <span>Settings</span>
                             </a>
                         </li>
+                        @if (Route::has('admin.modules.index'))
+                            <li class="{{ ! starts_with(Route::currentRouteName(), 'admin.modules') ?: 'active' }}">
+                                <a href="{{ route('admin.modules.index') }}">
+                                    <i class="fa fa-puzzle-piece"></i> <span>Modules</span>
+                                </a>
+                            </li>
+                        @endif
                         <li class="{{ ! starts_with(Route::currentRouteName(), 'admin.api') ?: 'active' }}">
                             <a href="{{ route('admin.api.index')}}">
                                 <i class="fa fa-gamepad"></i> <span>Application API</span>
                             </a>
                         </li>
+                        @if (! empty($modularAdminNavigation['modules']))
+                            <li class="header">MODULES</li>
+                            @foreach ($modularAdminNavigation['modules'] as $navigationItem)
+                                <li class="{{ request()->is($navigationItem['active_pattern']) ? 'active' : '' }}">
+                                    <a href="{{ url($navigationItem['path']) }}">
+                                        <i class="fa {{ $navigationItem['icon'] }}"></i> <span>{{ $navigationItem['label'] }}</span>
+                                    </a>
+                                </li>
+                            @endforeach
+                        @endif
                         <li class="header">MANAGEMENT</li>
                         <li class="{{ ! starts_with(Route::currentRouteName(), 'admin.databases') ?: 'active' }}">
                             <a href="{{ route('admin.databases') }}">

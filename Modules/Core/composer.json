@@ -1,0 +1,16 @@
+{
+  "name": "tensacraft/pterodactyl-core-module",
+  "type": "library",
+  "autoload": {
+    "psr-4": {
+      "Modules\\Core\\": ""
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Modules\\Core\\Providers\\CoreServiceProvider"
+      ]
+    }
+  }
+}

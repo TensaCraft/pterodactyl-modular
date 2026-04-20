@@ -1,0 +1,14 @@
+{
+  "modified_upstream_files": [
+    "composer.json",
+    "composer.lock",
+    "config/app.php",
+    "resources/scripts/components/App.tsx",
+    "resources/scripts/components/dashboard/DashboardContainer.tsx",
+    "resources/scripts/globals.d.ts",
+    "resources/scripts/routers/DashboardRouter.tsx",
+    "resources/scripts/routers/ServerRouter.tsx",
+    "resources/views/layouts/admin.blade.php",
+    "resources/views/templates/wrapper.blade.php"
+  ]
+}

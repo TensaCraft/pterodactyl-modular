@@ -1,0 +1,32 @@
+[
+  {
+    "name": "release-v1-12-2",
+    "upstream_ref": "release/v1.12.2",
+    "patch_base_ref": "upstream/release/v1.12.2",
+    "patch_source_ref": "origin/main",
+    "replay_branch": "automation/replays/release-v1-12-2",
+    "pr_base_branch": "main",
+    "verification_profile": "release",
+    "open_pr": true
+  },
+  {
+    "name": "develop",
+    "upstream_ref": "develop",
+    "patch_base_ref": "upstream/release/v1.12.2",
+    "patch_source_ref": "origin/main",
+    "replay_branch": "automation/replays/develop",
+    "pr_base_branch": null,
+    "verification_profile": "develop",
+    "open_pr": false
+  },
+  {
+    "name": "v2",
+    "upstream_ref": "v2",
+    "patch_base_ref": "upstream/release/v1.12.2",
+    "patch_source_ref": "origin/main",
+    "replay_branch": "automation/replays/v2",
+    "pr_base_branch": null,
+    "verification_profile": "v2",
+    "open_pr": false
+  }
+]

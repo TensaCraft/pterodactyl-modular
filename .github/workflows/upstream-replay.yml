@@ -1,0 +1,191 @@
+name: Upstream Replay
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      track:
+        description: Specific replay track to run. Leave empty to run all tracks.
+        required: false
+        default: ''
+      publish_pr:
+        description: Publish or update draft pull requests for tracks that allow it.
+        required: false
+        default: 'true'
+      run_verification:
+        description: Run the modular verification suite after a successful replay.
+        required: false
+        default: 'true'
+  repository_dispatch:
+    types:
+      - modular-upstream-replay
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        track:
+          - release-v1-12-2
+          - develop
+          - v2
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.track == '' || inputs.track == matrix.track }}
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_DATABASE: pterodactyl_modular_test
+          MARIADB_USER: pterodactyl
+          MARIADB_PASSWORD: pterodactyl
+          MARIADB_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mariadb-admin ping --host=127.0.0.1 --user=root --password=root"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+          extensions: mbstring, pdo_mysql, zip
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: yarn
+
+      - name: Configure upstream remote
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add upstream https://github.com/pterodactyl/panel.git 2>/dev/null || git remote set-url upstream https://github.com/pterodactyl/panel.git
+          git fetch --prune origin "+refs/heads/*:refs/remotes/origin/*"
+          git fetch --prune upstream "+refs/heads/*:refs/remotes/upstream/*"
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Install frontend dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run replay
+        id: replay
+        run: |
+          mkdir -p storage/app/modular/upstream-replay
+          set +e
+          php scripts/modular/upstream_replay.php --mode=apply --track="${{ matrix.track }}" --report-dir=storage/app/modular/upstream-replay
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          echo "report_path=storage/app/modular/upstream-replay/${{ matrix.track }}.json" >> "$GITHUB_OUTPUT"
+          if [ -f "storage/app/modular/upstream-replay/${{ matrix.track }}.json" ]; then
+            status=$(php -r '$data=json_decode(file_get_contents($argv[1]), true); echo $data["status"] ?? "missing";' "storage/app/modular/upstream-replay/${{ matrix.track }}.json")
+            branch=$(php -r '$data=json_decode(file_get_contents($argv[1]), true); echo $data["replay_branch"] ?? "";' "storage/app/modular/upstream-replay/${{ matrix.track }}.json")
+            echo "replay_status=$status" >> "$GITHUB_OUTPUT"
+            echo "replay_branch=$branch" >> "$GITHUB_OUTPUT"
+          fi
+          exit 0
+
+      - name: Run modular verification
+        id: verify
+        if: ${{ steps.replay.outputs.replay_status == 'applied' && (github.event_name != 'workflow_dispatch' || inputs.run_verification != 'false') }}
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: pterodactyl_modular_test
+          DB_USERNAME: pterodactyl
+          DB_PASSWORD: pterodactyl
+          REDIS_HOST: 127.0.0.1
+          REDIS_PORT: 6379
+          REDIS_PASSWORD: redis
+          SESSION_DRIVER: array
+          CACHE_STORE: array
+          QUEUE_CONNECTION: sync
+        run: |
+          php vendor/bin/phpunit tests/Unit/Modules tests/Integration/Modules tests/Integration/Jobs/Modules tests/Integration/Http/Controllers/Admin/Modules tests/Integration/Http/Base/WrapperTemplateRegistryInjectionTest.php
+          php artisan modular:rebuild-registry
+          yarn test --runInBand
+          yarn tsc
+
+      - name: Update replay verification status
+        if: ${{ always() && steps.replay.outputs.report_path != '' }}
+        env:
+          REPORT_PATH: ${{ steps.replay.outputs.report_path }}
+          SHOULD_VERIFY: ${{ github.event_name != 'workflow_dispatch' || inputs.run_verification != 'false' }}
+          VERIFY_OUTCOME: ${{ steps.verify.outcome }}
+        run: |
+          php -r '
+          $path = getenv("REPORT_PATH");
+          if (!is_file($path)) { exit(0); }
+          $data = json_decode(file_get_contents($path), true, flags: JSON_THROW_ON_ERROR);
+          $shouldVerify = getenv("SHOULD_VERIFY") === "true";
+          $data["verification_status"] = $shouldVerify ? (getenv("VERIFY_OUTCOME") ?: "failed") : "skipped";
+          file_put_contents($path, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
+          '
+
+      - name: Push replay branch
+        if: ${{ steps.replay.outputs.replay_status == 'applied' && (steps.verify.outcome == 'success' || github.event_name == 'workflow_dispatch' && inputs.run_verification == 'false') }}
+        run: |
+          git push --force-with-lease origin "HEAD:${{ steps.replay.outputs.replay_branch }}"
+
+      - name: Publish or update draft PR
+        if: ${{ steps.replay.outputs.replay_status == 'applied' && (steps.verify.outcome == 'success' || github.event_name == 'workflow_dispatch' && inputs.run_verification == 'false') && (github.event_name != 'workflow_dispatch' || inputs.publish_pr != 'false') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          php scripts/modular/open_replay_pr.php --track="${{ matrix.track }}" --report="${{ steps.replay.outputs.report_path }}"
+
+      - name: Upload replay report
+        if: ${{ always() && steps.replay.outputs.report_path != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: upstream-replay-${{ matrix.track }}
+          path: ${{ steps.replay.outputs.report_path }}
+
+      - name: Write workflow summary
+        if: ${{ always() && steps.replay.outputs.report_path != '' }}
+        env:
+          REPORT_PATH: ${{ steps.replay.outputs.report_path }}
+        run: |
+          php -r '
+          $path = getenv("REPORT_PATH");
+          if (!is_file($path)) { exit(0); }
+          $data = json_decode(file_get_contents($path), true, flags: JSON_THROW_ON_ERROR);
+          $lines = [
+              "## Upstream replay: {$data["track"]}",
+              "",
+              "- Status: `{$data["status"]}`",
+              "- Upstream ref: `{$data["upstream_ref"]}`",
+              "- Upstream SHA: `{$data["upstream_sha"]}`",
+              "- Replay branch: `{$data["replay_branch"]}`",
+              "- Patch commits: `" . ($data["patch_commit_count"] ?? 0) . "`",
+              "- Verification: `" . ($data["verification_status"] ?? "pending") . "`",
+          ];
+          if (!empty($data["error"])) {
+              $lines[] = "- Error: `" . str_replace("`", "\x27", $data["error"]) . "`";
+          }
+          file_put_contents(getenv("GITHUB_STEP_SUMMARY"), implode(PHP_EOL, $lines) . PHP_EOL, FILE_APPEND);
+          '
+
+      - name: Fail on replay or verification errors
+        if: ${{ steps.replay.outputs.replay_status != 'applied' || (steps.verify.outcome != 'success' && !(github.event_name == 'workflow_dispatch' && inputs.run_verification == 'false')) }}
+        run: exit 1

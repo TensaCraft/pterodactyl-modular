@@ -19,7 +19,7 @@ import { faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons';
 import { useLocation } from 'react-router';
 import ConflictStateRenderer from '@/components/server/ConflictStateRenderer';
 import PermissionRoute from '@/components/elements/PermissionRoute';
-import routes from '@/routers/routes';
+import routes from '@/modular/routeRegistry';
 
 export default () => {
     const match = useRouteMatch<{ id: string }>();
@@ -109,8 +109,8 @@ export default () => {
                         <ErrorBoundary>
                             <TransitionRouter>
                                 <Switch location={location}>
-                                    {routes.server.map(({ path, permission, component: Component }) => (
-                                        <PermissionRoute key={path} permission={permission} path={to(path)} exact>
+                                    {routes.server.map(({ path, permission, component: Component, exact = true }) => (
+                                        <PermissionRoute key={path} permission={permission} path={to(path)} exact={exact}>
                                             <Spinner.Suspense>
                                                 <Component />
                                             </Spinner.Suspense>

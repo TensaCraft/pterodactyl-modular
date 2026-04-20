@@ -7,7 +7,7 @@ import TransitionRouter from '@/TransitionRouter';
 import SubNavigation from '@/components/elements/SubNavigation';
 import { useLocation } from 'react-router';
 import Spinner from '@/components/elements/Spinner';
-import routes from '@/routers/routes';
+import routes from '@/modular/routeRegistry';
 
 export default () => {
     const location = useLocation();
@@ -34,8 +34,8 @@ export default () => {
                         <Route path={'/'} exact>
                             <DashboardContainer />
                         </Route>
-                        {routes.account.map(({ path, component: Component }) => (
-                            <Route key={path} path={`/account/${path}`.replace('//', '/')} exact>
+                        {routes.account.map(({ path, component: Component, exact = true }) => (
+                            <Route key={path} path={`/account/${path}`.replace('//', '/')} exact={exact}>
                                 <Component />
                             </Route>
                         ))}

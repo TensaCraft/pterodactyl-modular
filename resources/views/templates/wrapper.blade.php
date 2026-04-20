@@ -30,6 +30,11 @@
                     window.SiteConfiguration = {!! json_encode($siteConfiguration) !!};
                 </script>
             @endif
+            @if(app()->bound(\Modules\Core\Contracts\FrontendRegistryStoreInterface::class))
+                <script>
+                    window.ModularFrontendRegistry = {!! json_encode(app(\Modules\Core\Contracts\FrontendRegistryStoreInterface::class)->read()) !!};
+                </script>
+            @endif
         @show
 
         @yield('assets')

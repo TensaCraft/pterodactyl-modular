@@ -37,6 +37,7 @@
         "league/flysystem-aws-s3-v3": "^3.30.1",
         "league/flysystem-memory": "^3.29.0",
         "matriphe/iso-639": "~2.0",
+        "nwidart/laravel-modules": "^11.1",
         "phpseclib/phpseclib": "^3.0.47",
         "pragmarx/google2fa": "~8.0.3",
         "predis/predis": "^3.3.0",
@@ -71,6 +72,7 @@
         ],
         "psr-4": {
             "Pterodactyl\\": "app/",
+            "Modules\\": "Modules/",
             "Database\\Factories\\": "database/Factories/",
             "Database\\Seeders\\": "database/Seeders/"
         }
@@ -81,6 +83,7 @@
         }
     },
     "scripts": {
+        "modular:replay": "@php scripts/modular/upstream_replay.php",
         "cs:fix": "php-cs-fixer fix",
         "cs:check": "php-cs-fixer fix --dry-run --diff --verbose",
         "post-autoload-dump": [
@@ -97,11 +100,24 @@
         ]
     },
     "config": {
+        "allow-plugins": {
+            "wikimedia/composer-merge-plugin": true
+        },
         "optimize-autoloader": true,
         "preferred-install": "dist",
         "sort-packages": true,
         "platform": {
             "php": "8.2.0"
+        }
+    },
+    "extra": {
+        "merge-plugin": {
+            "include": [
+                "Modules/*/composer.json"
+            ],
+            "recurse": false,
+            "replace": false,
+            "merge-extra": false
         }
     },
     "minimum-stability": "stable",

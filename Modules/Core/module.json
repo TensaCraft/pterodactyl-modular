@@ -1,0 +1,28 @@
+{
+  "name": "Core",
+  "slug": "core",
+  "version": "0.1.0",
+  "description": "Protected modular runtime for the TensaCraft Pterodactyl fork.",
+  "core_api_constraint": "^1.0",
+  "panel_constraint": "^1.12.2",
+  "priority": 0,
+  "is_protected": true,
+  "dependencies": [],
+  "conflicts": [],
+  "providers": [
+    "Modules\\Core\\Providers\\CoreServiceProvider"
+  ],
+  "has_frontend": false,
+  "has_migrations": true,
+  "has_seeders": false,
+  "has_queue_jobs": false,
+  "has_scheduler_tasks": false,
+  "permissions": [
+    "modules.view"
+  ],
+  "settings_schema": null,
+  "frontend": {
+    "zones": []
+  },
+  "lifecycle_hooks": {}
+}

@@ -192,6 +192,7 @@ return [
          */
         Pterodactyl\Providers\ActivityLogServiceProvider::class,
         Pterodactyl\Providers\AppServiceProvider::class,
+        Pterodactyl\Providers\ModulesServiceProvider::class,
         Pterodactyl\Providers\AuthServiceProvider::class,
         Pterodactyl\Providers\BackupsServiceProvider::class,
         Pterodactyl\Providers\BladeServiceProvider::class,

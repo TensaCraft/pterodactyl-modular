@@ -40,9 +40,7 @@ configure_panel_nginx
 wait_for_database
 wait_for_redis
 
-echo "Migrating and Seeding D.B"
-php artisan migrate --seed --force
-php /app/.docker/local/setup_local_wings.php
+echo "Production-safe startup: skipping automatic migrations, seeding, and local Wings setup."
 ensure_runtime_write_permissions
 rm -f /app/var/panel-starting
 touch /app/var/panel-ready

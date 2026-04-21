@@ -54,6 +54,7 @@ x-modular-common: &modular-common
   environment: *modular-environment
   volumes:
     - pterodactyl-var:/app/var
+    - pterodactyl-storage-app:/app/storage/app
     - pterodactyl-logs:/app/storage/logs
     - pterodactyl-vendor:/app/vendor
     - pterodactyl-node-modules:/app/node_modules
@@ -69,6 +70,7 @@ services:
     command: ["/bin/ash", ".docker/panel/start-panel.sh"]
     volumes:
       - pterodactyl-var:/app/var
+      - pterodactyl-storage-app:/app/storage/app
       - pterodactyl-logs:/app/storage/logs
       - pterodactyl-vendor:/app/vendor
       - pterodactyl-node-modules:/app/node_modules
@@ -111,6 +113,7 @@ services:
 
 volumes:
   pterodactyl-var:
+  pterodactyl-storage-app:
   pterodactyl-logs:
   pterodactyl-vendor:
   pterodactyl-node-modules:

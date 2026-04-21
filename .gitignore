@@ -24,6 +24,8 @@ public/assets/manifest.json
 docker-compose.*
 !docker-compose.example.yml
 !docker-compose.example.yaml
+!docker-compose.modular.prod.yml
+!docker-compose.modular.dev.yml
 
 # for image related files
 misc

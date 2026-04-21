@@ -1,0 +1,26 @@
+services:
+  panel:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel.entrypoints=http"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel.rule=Host(`${PANEL_DOMAIN:?Set PANEL_DOMAIN for the Traefik override}`)"
+      - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel.middlewares=${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel-https-redirect"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel-secure.entrypoints=https"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel-secure.rule=Host(`${PANEL_DOMAIN:?Set PANEL_DOMAIN for the Traefik override}`)"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel-secure.tls=true"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel-secure.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel-secure.service=${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel-svc"
+      - "traefik.http.services.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel-svc.loadbalancer.server.port=80"
+      - "traefik.docker.network=${PROXY_NETWORK:-proxy}"
+    networks:
+      default: {}
+      proxy:
+        aliases:
+          - panel
+          - pterodactyl-panel
+
+networks:
+  proxy:
+    external: true
+    name: ${PROXY_NETWORK:-proxy}

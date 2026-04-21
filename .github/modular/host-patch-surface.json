@@ -1,5 +1,7 @@
 {
   "modified_upstream_files": [
+    ".env.example",
+    ".gitignore",
     "composer.json",
     "composer.lock",
     "config/app.php",

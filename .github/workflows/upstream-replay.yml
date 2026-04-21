@@ -80,7 +80,7 @@ jobs:
         if: ${{ steps.track_filter.outputs.enabled == 'true' }}
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: yarn
 
       - name: Configure upstream remote

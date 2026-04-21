@@ -26,6 +26,7 @@ RUN apk add --no-cache --update ca-certificates curl git supervisor tar unzip ng
     && chmod 777 -R bootstrap storage \
     && composer install --no-dev --optimize-autoloader --no-scripts --no-interaction \
     && mkdir -p /opt/pterodactyl \
+    && cp -R Modules /opt/pterodactyl/modules \
     && cp -R vendor /opt/pterodactyl/vendor \
     && cp -R node_modules /opt/pterodactyl/node-modules \
     && cp -R public/assets /opt/pterodactyl/public-assets \

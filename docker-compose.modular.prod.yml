@@ -35,9 +35,6 @@ x-modular-common: &modular-common
     - pterodactyl-vendor:/app/vendor
     - pterodactyl-node-modules:/app/node_modules
     - pterodactyl-assets:/app/public/assets
-  networks:
-    - default
-    - shared-services
 
 services:
   panel:
@@ -47,19 +44,6 @@ services:
       context: .
       dockerfile: .docker/panel/Dockerfile
     command: ["/bin/ash", ".docker/panel/start-panel.sh"]
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel.entrypoints=http"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel.rule=Host(`${PANEL_DOMAIN:?Set PANEL_DOMAIN for the modular production stack}`)"
-      - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel-https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel.middlewares=${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel-https-redirect"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel-secure.entrypoints=https"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel-secure.rule=Host(`${PANEL_DOMAIN:?Set PANEL_DOMAIN for the modular production stack}`)"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel-secure.tls=true"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel-secure.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel-secure.service=${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel-svc"
-      - "traefik.http.services.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel-svc.loadbalancer.server.port=80"
-      - "traefik.docker.network=${PROXY_NETWORK:-proxy}"
     volumes:
       - pterodactyl-var:/app/var
       - pterodactyl-logs:/app/storage/logs
@@ -68,12 +52,6 @@ services:
       - pterodactyl-assets:/app/public/assets
       - pterodactyl-nginx:/etc/nginx/http.d
       - pterodactyl-certs:/etc/letsencrypt
-    networks:
-      default: {}
-      shared-services:
-        aliases:
-          - panel
-          - pterodactyl-panel
 
   queue:
     <<: *modular-common
@@ -116,8 +94,3 @@ volumes:
   pterodactyl-assets:
   pterodactyl-nginx:
   pterodactyl-certs:
-
-networks:
-  shared-services:
-    external: true
-    name: ${PROXY_NETWORK:-proxy}

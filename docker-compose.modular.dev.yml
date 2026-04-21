@@ -36,9 +36,6 @@ x-modular-common: &modular-common
     - pterodactyl-dev-vendor:/app/vendor
     - pterodactyl-dev-node-modules:/app/node_modules
     - pterodactyl-dev-assets:/app/public/assets
-  networks:
-    - default
-    - shared-services
 
 services:
   panel:
@@ -48,19 +45,6 @@ services:
       context: .
       dockerfile: .docker/panel/Dockerfile
     command: ["/bin/ash", ".docker/panel/start-panel.sh"]
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods-dev}-panel.entrypoints=http"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods-dev}-panel.rule=Host(`${PANEL_DOMAIN:?Set PANEL_DOMAIN for the modular dev stack}`)"
-      - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME:-pterodactyl-mods-dev}-panel-https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods-dev}-panel.middlewares=${COMPOSE_PROJECT_NAME:-pterodactyl-mods-dev}-panel-https-redirect"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods-dev}-panel-secure.entrypoints=https"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods-dev}-panel-secure.rule=Host(`${PANEL_DOMAIN:?Set PANEL_DOMAIN for the modular dev stack}`)"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods-dev}-panel-secure.tls=true"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods-dev}-panel-secure.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods-dev}-panel-secure.service=${COMPOSE_PROJECT_NAME:-pterodactyl-mods-dev}-panel-svc"
-      - "traefik.http.services.${COMPOSE_PROJECT_NAME:-pterodactyl-mods-dev}-panel-svc.loadbalancer.server.port=80"
-      - "traefik.docker.network=${PROXY_NETWORK:-proxy}"
     volumes:
       - ./:/app
       - pterodactyl-dev-var:/app/var
@@ -70,12 +54,6 @@ services:
       - pterodactyl-dev-assets:/app/public/assets
       - pterodactyl-dev-nginx:/etc/nginx/http.d
       - pterodactyl-dev-certs:/etc/letsencrypt
-    networks:
-      default: {}
-      shared-services:
-        aliases:
-          - panel
-          - pterodactyl-panel
 
   queue:
     <<: *modular-common
@@ -122,8 +100,6 @@ services:
       WINGS_UID: 988
       WINGS_GID: 988
       WINGS_USERNAME: pterodactyl
-    extra_hosts:
-      - "${PANEL_DOMAIN:?Set PANEL_DOMAIN for the modular dev stack}:host-gateway"
     ports:
       - "${WINGS_HTTP_PORT:-8080}:8080"
       - "${WINGS_SFTP_PORT:-2022}:2022"
@@ -136,12 +112,6 @@ services:
       - ${LOCAL_WINGS_HOST_TMP_ROOT:-/tmp/pterodactyl}:/tmp/pterodactyl
       - /etc/ssl/certs:/etc/ssl/certs:ro
       - ${LOCAL_WINGS_HOST_RUN_ROOT:-/run/wings}:/run/wings
-    networks:
-      default: {}
-      shared-services:
-        aliases:
-          - wings
-          - pterodactyl-wings
 
   redis_local:
     image: redis:7-alpine
@@ -167,8 +137,3 @@ volumes:
   pterodactyl-dev-assets:
   pterodactyl-dev-nginx:
   pterodactyl-dev-certs:
-
-networks:
-  shared-services:
-    external: true
-    name: ${PROXY_NETWORK:-proxy}

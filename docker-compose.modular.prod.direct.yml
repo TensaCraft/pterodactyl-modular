@@ -1,0 +1,4 @@
+services:
+  panel:
+    ports:
+      - "${PANEL_BIND_IP:-127.0.0.1}:${PANEL_HTTP_PORT:-8080}:80"

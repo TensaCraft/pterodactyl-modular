@@ -1,19 +1,32 @@
 name: ${MODULAR_STACK_NAME:-pterodactyl-mods}
 
 x-modular-environment: &modular-environment
-  APP_ENV: production
-  APP_ENVIRONMENT_ONLY: "false"
-  APP_DEBUG: "false"
-  APP_THEME: pterodactyl
+  APP_NAME: ${APP_NAME:-Pterodactyl}
+  APP_ENV: ${APP_ENV:-production}
+  APP_ENVIRONMENT_ONLY: ${APP_ENVIRONMENT_ONLY:-false}
+  APP_DEBUG: ${APP_DEBUG:-false}
+  APP_THEME: ${APP_THEME:-pterodactyl}
   APP_KEY: ${APP_KEY:-}
   APP_TIMEZONE: ${APP_TIMEZONE:-UTC}
+  APP_LOCALE: ${APP_LOCALE:-en}
+  APP_FALLBACK_LOCALE: ${APP_FALLBACK_LOCALE:-en}
+  APP_SERVICE_AUTHOR: ${APP_SERVICE_AUTHOR:-unknown@unknown.com}
   APP_URL: ${APP_URL:?Set APP_URL for the modular production stack}
   RECAPTCHA_ENABLED: ${RECAPTCHA_ENABLED:-true}
+  RECAPTCHA_DOMAIN: ${RECAPTCHA_DOMAIN:-https://www.google.com/recaptcha/api/siteverify}
+  RECAPTCHA_SECRET_KEY: ${RECAPTCHA_SECRET_KEY:-}
+  RECAPTCHA_WEBSITE_KEY: ${RECAPTCHA_WEBSITE_KEY:-}
+  LOG_CHANNEL: ${LOG_CHANNEL:-daily}
+  LOG_DEPRECATIONS_CHANNEL: ${LOG_DEPRECATIONS_CHANNEL:-null}
+  LOG_LEVEL: ${LOG_LEVEL:-debug}
+  TRUSTED_PROXIES: ${TRUSTED_PROXIES:-}
   HASHIDS_SALT: ${HASHIDS_SALT:-}
-  CACHE_DRIVER: redis
-  SESSION_DRIVER: redis
-  QUEUE_CONNECTION: redis
-  DB_CONNECTION: mysql
+  CACHE_DRIVER: ${CACHE_DRIVER:-redis}
+  SESSION_DRIVER: ${SESSION_DRIVER:-redis}
+  SESSION_DOMAIN: ${SESSION_DOMAIN:-}
+  SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE:-}
+  QUEUE_CONNECTION: ${QUEUE_CONNECTION:-redis}
+  DB_CONNECTION: ${DB_CONNECTION:-mysql}
   DB_HOST: ${DB_HOST:?Set DB_HOST for the modular production stack}
   DB_PORT: ${DB_PORT:-3306}
   DB_DATABASE: ${DB_DATABASE:?Set DB_DATABASE for the modular production stack}
@@ -22,7 +35,17 @@ x-modular-environment: &modular-environment
   REDIS_HOST: ${REDIS_HOST:?Set REDIS_HOST for the modular production stack}
   REDIS_PORT: ${REDIS_PORT:-6379}
   REDIS_PASSWORD: ${REDIS_PASSWORD:?Set REDIS_PASSWORD for the modular production stack}
+  REDIS_PREFIX: ${REDIS_PREFIX:-}
   HASHIDS_LENGTH: ${HASHIDS_LENGTH:-8}
+  MAIL_MAILER: ${MAIL_MAILER:-smtp}
+  MAIL_HOST: ${MAIL_HOST:-localhost}
+  MAIL_PORT: ${MAIL_PORT:-25}
+  MAIL_USERNAME: ${MAIL_USERNAME:-}
+  MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+  MAIL_ENCRYPTION: ${MAIL_ENCRYPTION:-}
+  MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-no-reply@example.com}
+  MAIL_FROM_NAME: ${MAIL_FROM_NAME:-Pterodactyl Panel}
+  MAIL_EHLO_DOMAIN: ${MAIL_EHLO_DOMAIN:-}
   LE_EMAIL: ${LE_EMAIL:-}
 
 x-modular-common: &modular-common

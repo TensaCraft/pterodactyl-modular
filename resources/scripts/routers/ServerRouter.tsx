@@ -32,6 +32,7 @@ export default () => {
     const uuid = ServerContext.useStoreState((state) => state.server.data?.uuid);
     const inConflictState = ServerContext.useStoreState((state) => state.server.inConflictState);
     const serverId = ServerContext.useStoreState((state) => state.server.data?.internalId);
+    const server = ServerContext.useStoreState((state) => state.server.data);
     const getServer = ServerContext.useStoreActions((actions) => actions.server.getServer);
     const clearServerState = ServerContext.useStoreActions((actions) => actions.clearServerState);
 
@@ -62,6 +63,14 @@ export default () => {
         };
     }, [match.params.id]);
 
+    const visibleServerRoutes = routes.server.filter((route) => {
+        if (!route.visible) {
+            return true;
+        }
+
+        return server ? route.visible({ server }) : false;
+    });
+
     return (
         <React.Fragment key={'server-router'}>
             <NavigationBar />
@@ -77,6 +86,7 @@ export default () => {
                         <SubNavigation>
                             <div>
                                 {routes.server
+                                    .filter((route) => !route.visible || (server ? route.visible({ server }) : false))
                                     .filter((route) => !!route.name)
                                     .map((route) =>
                                         route.permission ? (
@@ -109,7 +119,7 @@ export default () => {
                         <ErrorBoundary>
                             <TransitionRouter>
                                 <Switch location={location}>
-                                    {routes.server.map(({ path, permission, component: Component, exact = true }) => (
+                                    {visibleServerRoutes.map(({ path, permission, component: Component, exact = true }) => (
                                         <PermissionRoute key={path} permission={permission} path={to(path)} exact={exact}>
                                             <Spinner.Suspense>
                                                 <Component />

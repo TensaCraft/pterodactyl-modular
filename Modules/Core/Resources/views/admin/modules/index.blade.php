@@ -100,6 +100,12 @@
                                                 <button type="submit" class="btn btn-xs btn-warning"><i class="fa fa-pause"></i> Disable</button>
                                             </form>
                                         @endif
+                                        @if ($module->canDelete)
+                                            <form action="{{ route('admin.modules.action', ['module' => $module->slug, 'action' => 'delete']) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Delete module [{{ $module->name }}]? This removes the module files from disk.');">
+                                                @csrf
+                                                <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i> Delete</button>
+                                            </form>
+                                        @endif
                                         @if ($module->canRebuild)
                                             <form action="{{ route('admin.modules.action', ['module' => $module->slug, 'action' => 'rebuild-registry']) }}" method="POST" style="display:inline-block;">
                                                 @csrf

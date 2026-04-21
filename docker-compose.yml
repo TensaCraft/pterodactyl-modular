@@ -53,6 +53,7 @@ x-modular-common: &modular-common
   restart: unless-stopped
   environment: *modular-environment
   volumes:
+    - pterodactyl-modules:/app/Modules
     - pterodactyl-var:/app/var
     - pterodactyl-storage-app:/app/storage/app
     - pterodactyl-logs:/app/storage/logs
@@ -69,6 +70,7 @@ services:
       dockerfile: .docker/panel/Dockerfile
     command: ["/bin/ash", ".docker/panel/start-panel.sh"]
     volumes:
+      - pterodactyl-modules:/app/Modules
       - pterodactyl-var:/app/var
       - pterodactyl-storage-app:/app/storage/app
       - pterodactyl-logs:/app/storage/logs
@@ -112,11 +114,21 @@ services:
     command: ["/bin/ash", ".docker/panel/start-init.sh"]
 
 volumes:
+  pterodactyl-modules:
+    name: pterodactyl-modules
   pterodactyl-var:
+    name: pterodactyl-var
   pterodactyl-storage-app:
+    name: pterodactyl-storage-app
   pterodactyl-logs:
+    name: pterodactyl-logs
   pterodactyl-vendor:
+    name: pterodactyl-vendor
   pterodactyl-node-modules:
+    name: pterodactyl-node-modules
   pterodactyl-assets:
+    name: pterodactyl-assets
   pterodactyl-nginx:
+    name: pterodactyl-nginx
   pterodactyl-certs:
+    name: pterodactyl-certs

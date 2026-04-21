@@ -1,4 +1,9 @@
 services:
+  init:
+    networks:
+      default: {}
+      proxy: {}
+
   panel:
     networks:
       default: {}
@@ -6,6 +11,16 @@ services:
         aliases:
           - panel
           - pterodactyl-panel
+
+  queue:
+    networks:
+      default: {}
+      proxy: {}
+
+  scheduler:
+    networks:
+      default: {}
+      proxy: {}
 
 networks:
   proxy:

@@ -16,16 +16,15 @@ WORKDIR /app
 COPY . ./
 COPY --from=0 /app/node_modules ./node_modules
 COPY --from=0 /app/public/assets ./public/assets
-COPY public/assets/svgs ./public/assets/svgs
 RUN apk add --no-cache --update ca-certificates curl git supervisor tar unzip nginx libpng-dev libxml2-dev libzip-dev certbot certbot-nginx mysql-client nodejs npm \
     && docker-php-ext-configure zip \
     && docker-php-ext-install bcmath gd pdo_mysql zip \
     && npm install -g yarn@1.22.22 \
     && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
-    && cp .env.example .env \
+    && if [ ! -f .env ]; then if [ -f .env.example ]; then cp .env.example .env; else touch .env; fi; fi \
     && mkdir -p bootstrap/cache/ storage/logs storage/framework/sessions storage/framework/views storage/framework/cache \
     && chmod 777 -R bootstrap storage \
-    && composer install --no-dev --optimize-autoloader \
+    && composer install --no-dev --optimize-autoloader --no-scripts --no-interaction \
     && mkdir -p /opt/pterodactyl \
     && cp -R vendor /opt/pterodactyl/vendor \
     && cp -R node_modules /opt/pterodactyl/node-modules \

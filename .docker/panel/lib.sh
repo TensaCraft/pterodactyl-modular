@@ -108,6 +108,7 @@ ensure_runtime_write_permissions() {
   echo "Normalizing runtime write permissions."
 
   for path in \
+    /app/Modules \
     /app/storage \
     /app/bootstrap/cache \
     /app/storage/app/modular
@@ -176,6 +177,32 @@ sync_snapshot_directory() {
   fi
 }
 
+sync_seeded_modules_directory() {
+  snapshot_root="$1"
+  target_root="$2"
+
+  if [ ! -d "$snapshot_root" ]; then
+    echo "No seeded modules snapshot found in the image."
+    return 0
+  fi
+
+  mkdir -p "$target_root"
+
+  for source_dir in "$snapshot_root"/*; do
+    if [ ! -d "$source_dir" ]; then
+      continue
+    fi
+
+    module_name="$(basename "$source_dir")"
+    target_dir="$target_root/$module_name"
+
+    echo "Refreshing seeded module [$module_name] from the image snapshot."
+    rm -rf "$target_dir"
+    mkdir -p "$target_dir"
+    cp -a "$source_dir"/. "$target_dir"/
+  done
+}
+
 with_runtime_artifact_lock() {
   mkdir -p /app/var
 
@@ -235,12 +262,13 @@ wait_for_panel_ready() {
 }
 
 sync_runtime_artifacts() {
-  echo "Syncing vendor, node modules, and frontend artifacts from image snapshots."
+  echo "Syncing vendor, node modules, frontend artifacts, and seeded modules from image snapshots."
 
   with_runtime_artifact_lock
   sync_snapshot_directory /opt/pterodactyl/vendor /app/vendor "Vendor"
   sync_snapshot_directory /opt/pterodactyl/node-modules /app/node_modules "Node modules"
   sync_snapshot_directory /opt/pterodactyl/public-assets /app/public/assets "Frontend assets"
+  sync_seeded_modules_directory /opt/pterodactyl/modules /app/Modules
   rmdir /app/var/.runtime-artifacts.lock 2>/dev/null || true
   trap - EXIT
 }

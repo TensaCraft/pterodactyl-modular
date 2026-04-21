@@ -1,4 +1,4 @@
-name: tensa-dev
+name: ${MODULAR_DEV_STACK_NAME:-pterodactyl-mods-dev}
 
 x-modular-environment: &modular-environment
   APP_ENV: ${APP_ENV:-local}
@@ -7,7 +7,7 @@ x-modular-environment: &modular-environment
   APP_THEME: pterodactyl
   APP_KEY: ${APP_KEY:-}
   APP_TIMEZONE: ${APP_TIMEZONE:-UTC}
-  APP_URL: ${APP_URL:-http://panel.local.proxy}
+  APP_URL: ${APP_URL:?Set APP_URL for the modular dev stack}
   RECAPTCHA_ENABLED: ${RECAPTCHA_ENABLED:-false}
   HASHIDS_SALT: ${HASHIDS_SALT:-}
   CACHE_DRIVER: redis
@@ -29,9 +29,6 @@ x-modular-common: &modular-common
   image: pterodactyl-modular:latest
   restart: unless-stopped
   environment: *modular-environment
-  extra_hosts:
-    - "${MODULAR_PANEL_DOMAIN:-panel.local.proxy}:host-gateway"
-    - "${MODULAR_WINGS_DOMAIN:-wings.local.proxy}:host-gateway"
   volumes:
     - ./:/app
     - pterodactyl-dev-var:/app/var
@@ -46,23 +43,23 @@ x-modular-common: &modular-common
 services:
   panel:
     <<: *modular-common
-    container_name: tensa-dev-panel
+    container_name: ${MODULAR_DEV_PANEL_CONTAINER:-panel-dev}
     build:
       context: .
       dockerfile: .docker/panel/Dockerfile
     command: ["/bin/ash", ".docker/panel/start-panel.sh"]
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-tensa-dev}-panel.entrypoints=http"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-tensa-dev}-panel.rule=Host(`${PANEL_DOMAIN:-panel.local.proxy}`)"
-      - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME:-tensa-dev}-panel-https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-tensa-dev}-panel.middlewares=${COMPOSE_PROJECT_NAME:-tensa-dev}-panel-https-redirect"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-tensa-dev}-panel-secure.entrypoints=https"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-tensa-dev}-panel-secure.rule=Host(`${PANEL_DOMAIN:-panel.local.proxy}`)"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-tensa-dev}-panel-secure.tls=true"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-tensa-dev}-panel-secure.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-tensa-dev}-panel-secure.service=${COMPOSE_PROJECT_NAME:-tensa-dev}-panel-svc"
-      - "traefik.http.services.${COMPOSE_PROJECT_NAME:-tensa-dev}-panel-svc.loadbalancer.server.port=80"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods-dev}-panel.entrypoints=http"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods-dev}-panel.rule=Host(`${PANEL_DOMAIN:?Set PANEL_DOMAIN for the modular dev stack}`)"
+      - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME:-pterodactyl-mods-dev}-panel-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods-dev}-panel.middlewares=${COMPOSE_PROJECT_NAME:-pterodactyl-mods-dev}-panel-https-redirect"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods-dev}-panel-secure.entrypoints=https"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods-dev}-panel-secure.rule=Host(`${PANEL_DOMAIN:?Set PANEL_DOMAIN for the modular dev stack}`)"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods-dev}-panel-secure.tls=true"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods-dev}-panel-secure.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods-dev}-panel-secure.service=${COMPOSE_PROJECT_NAME:-pterodactyl-mods-dev}-panel-svc"
+      - "traefik.http.services.${COMPOSE_PROJECT_NAME:-pterodactyl-mods-dev}-panel-svc.loadbalancer.server.port=80"
       - "traefik.docker.network=${PROXY_NETWORK:-proxy}"
     volumes:
       - ./:/app
@@ -82,7 +79,7 @@ services:
 
   queue:
     <<: *modular-common
-    container_name: tensa-dev-queue
+    container_name: ${MODULAR_DEV_QUEUE_CONTAINER:-queue-dev}
     depends_on:
       - panel
     environment:
@@ -92,7 +89,7 @@ services:
 
   scheduler:
     <<: *modular-common
-    container_name: tensa-dev-scheduler
+    container_name: ${MODULAR_DEV_SCHEDULER_CONTAINER:-scheduler-dev}
     depends_on:
       - panel
     environment:
@@ -102,7 +99,7 @@ services:
 
   init:
     <<: *modular-common
-    container_name: tensa-dev-init
+    container_name: ${MODULAR_DEV_INIT_CONTAINER:-init-dev}
     profiles: ["init"]
     restart: "no"
     environment:
@@ -115,7 +112,7 @@ services:
 
   wings:
     image: ghcr.io/pterodactyl/wings:v1.12.1
-    container_name: tensa-dev-wings
+    container_name: ${MODULAR_DEV_WINGS_CONTAINER:-wings-dev}
     restart: unless-stopped
     tty: true
     depends_on:
@@ -126,8 +123,7 @@ services:
       WINGS_GID: 988
       WINGS_USERNAME: pterodactyl
     extra_hosts:
-      - "${MODULAR_PANEL_DOMAIN:-panel.local.proxy}:host-gateway"
-      - "${MODULAR_WINGS_DOMAIN:-wings.local.proxy}:host-gateway"
+      - "${PANEL_DOMAIN:?Set PANEL_DOMAIN for the modular dev stack}:host-gateway"
     ports:
       - "${WINGS_HTTP_PORT:-8080}:8080"
       - "${WINGS_SFTP_PORT:-2022}:2022"
@@ -149,7 +145,7 @@ services:
 
   redis_local:
     image: redis:7-alpine
-    container_name: tensa-dev-redis-local
+    container_name: ${MODULAR_DEV_REDIS_LOCAL_CONTAINER:-redis-local-dev}
     profiles: ["redis-local"]
     restart: unless-stopped
     command:
@@ -157,7 +153,7 @@ services:
       - --appendonly
       - "yes"
       - --requirepass
-      - ${REDIS_PASSWORD:-change-me}
+      - ${REDIS_PASSWORD:?Set REDIS_PASSWORD when using the redis-local profile}
     networks:
       default:
         aliases:

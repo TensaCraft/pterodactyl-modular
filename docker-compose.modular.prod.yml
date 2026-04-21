@@ -1,4 +1,4 @@
-name: tensa
+name: ${MODULAR_STACK_NAME:-pterodactyl-mods}
 
 x-modular-environment: &modular-environment
   APP_ENV: production
@@ -7,7 +7,7 @@ x-modular-environment: &modular-environment
   APP_THEME: pterodactyl
   APP_KEY: ${APP_KEY:-}
   APP_TIMEZONE: ${APP_TIMEZONE:-UTC}
-  APP_URL: ${APP_URL:-http://panel.example.com}
+  APP_URL: ${APP_URL:?Set APP_URL for the modular production stack}
   RECAPTCHA_ENABLED: ${RECAPTCHA_ENABLED:-true}
   HASHIDS_SALT: ${HASHIDS_SALT:-}
   CACHE_DRIVER: redis
@@ -29,9 +29,6 @@ x-modular-common: &modular-common
   image: pterodactyl-modular:latest
   restart: unless-stopped
   environment: *modular-environment
-  extra_hosts:
-    - "${MODULAR_PANEL_DOMAIN:-panel.local.proxy}:host-gateway"
-    - "${MODULAR_WINGS_DOMAIN:-wings.local.proxy}:host-gateway"
   volumes:
     - pterodactyl-var:/app/var
     - pterodactyl-logs:/app/storage/logs
@@ -45,23 +42,23 @@ x-modular-common: &modular-common
 services:
   panel:
     <<: *modular-common
-    container_name: tensa-panel
+    container_name: ${MODULAR_PANEL_CONTAINER:-panel}
     build:
       context: .
       dockerfile: .docker/panel/Dockerfile
     command: ["/bin/ash", ".docker/panel/start-panel.sh"]
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-tensa}-panel.entrypoints=http"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-tensa}-panel.rule=Host(`${PANEL_DOMAIN:?Set PANEL_DOMAIN for the modular production stack}`)"
-      - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME:-tensa}-panel-https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-tensa}-panel.middlewares=${COMPOSE_PROJECT_NAME:-tensa}-panel-https-redirect"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-tensa}-panel-secure.entrypoints=https"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-tensa}-panel-secure.rule=Host(`${PANEL_DOMAIN:?Set PANEL_DOMAIN for the modular production stack}`)"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-tensa}-panel-secure.tls=true"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-tensa}-panel-secure.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}"
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-tensa}-panel-secure.service=${COMPOSE_PROJECT_NAME:-tensa}-panel-svc"
-      - "traefik.http.services.${COMPOSE_PROJECT_NAME:-tensa}-panel-svc.loadbalancer.server.port=80"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel.entrypoints=http"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel.rule=Host(`${PANEL_DOMAIN:?Set PANEL_DOMAIN for the modular production stack}`)"
+      - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel.middlewares=${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel-https-redirect"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel-secure.entrypoints=https"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel-secure.rule=Host(`${PANEL_DOMAIN:?Set PANEL_DOMAIN for the modular production stack}`)"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel-secure.tls=true"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel-secure.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel-secure.service=${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel-svc"
+      - "traefik.http.services.${COMPOSE_PROJECT_NAME:-pterodactyl-mods}-panel-svc.loadbalancer.server.port=80"
       - "traefik.docker.network=${PROXY_NETWORK:-proxy}"
     volumes:
       - pterodactyl-var:/app/var
@@ -80,7 +77,7 @@ services:
 
   queue:
     <<: *modular-common
-    container_name: tensa-queue
+    container_name: ${MODULAR_QUEUE_CONTAINER:-queue}
     depends_on:
       - panel
     environment:
@@ -90,7 +87,7 @@ services:
 
   scheduler:
     <<: *modular-common
-    container_name: tensa-scheduler
+    container_name: ${MODULAR_SCHEDULER_CONTAINER:-scheduler}
     depends_on:
       - panel
     environment:
@@ -100,7 +97,7 @@ services:
 
   init:
     <<: *modular-common
-    container_name: tensa-init
+    container_name: ${MODULAR_INIT_CONTAINER:-init}
     profiles: ["init"]
     restart: "no"
     environment:

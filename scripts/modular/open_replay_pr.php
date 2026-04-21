@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Modules\Core\Support\Automation\UpstreamPullRequestPayloadBuilder;
 use Modules\Core\Support\Automation\UpstreamTrackRepository;
 use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Contracts\HttpClient\Exception\HttpExceptionInterface;
 
 require __DIR__ . '/../../vendor/autoload.php';
 
@@ -70,38 +71,53 @@ $client = HttpClient::create([
     ],
 ]);
 
-$existing = $client->request('GET', sprintf('repos/%s/pulls', $repository), [
-    'query' => [
-        'state' => 'open',
-        'head' => $owner . ':' . $payload['head'],
-        'base' => $payload['base'],
-    ],
-])->toArray();
-
-if ($existing !== []) {
-    $pullRequest = $existing[0];
-    $response = $client->request('PATCH', sprintf('repos/%s/pulls/%d', $repository, $pullRequest['number']), [
-        'json' => [
-            'title' => $payload['title'],
-            'body' => $payload['body'],
+try {
+    $existing = $client->request('GET', sprintf('repos/%s/pulls', $repository), [
+        'query' => [
+            'state' => 'open',
+            'head' => $owner . ':' . $payload['head'],
             'base' => $payload['base'],
         ],
     ])->toArray();
 
+    if ($existing !== []) {
+        $pullRequest = $existing[0];
+        $response = $client->request('PATCH', sprintf('repos/%s/pulls/%d', $repository, $pullRequest['number']), [
+            'json' => [
+                'title' => $payload['title'],
+                'body' => $payload['body'],
+                'base' => $payload['base'],
+            ],
+        ])->toArray();
+
+        echo json_encode([
+            'status' => 'updated',
+            'number' => $response['number'],
+            'url' => $response['html_url'],
+        ], JSON_THROW_ON_ERROR) . PHP_EOL;
+        exit(0);
+    }
+
+    $response = $client->request('POST', sprintf('repos/%s/pulls', $repository), [
+        'json' => $payload,
+    ])->toArray();
+
     echo json_encode([
-        'status' => 'updated',
+        'status' => 'created',
         'number' => $response['number'],
         'url' => $response['html_url'],
     ], JSON_THROW_ON_ERROR) . PHP_EOL;
-    exit(0);
+} catch (HttpExceptionInterface $exception) {
+    $statusCode = $exception->getResponse()->getStatusCode();
+
+    if (in_array($statusCode, [401, 403], true)) {
+        echo json_encode([
+            'status' => 'skipped',
+            'reason' => 'GitHub token does not have permission to manage pull requests for this repository.',
+            'http_status' => $statusCode,
+        ], JSON_THROW_ON_ERROR) . PHP_EOL;
+        exit(0);
+    }
+
+    throw $exception;
 }
-
-$response = $client->request('POST', sprintf('repos/%s/pulls', $repository), [
-    'json' => $payload,
-])->toArray();
-
-echo json_encode([
-    'status' => 'created',
-    'number' => $response['number'],
-    'url' => $response['html_url'],
-], JSON_THROW_ON_ERROR) . PHP_EOL;

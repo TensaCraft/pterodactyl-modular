@@ -11,7 +11,6 @@ use Pterodactyl\Services\Nodes\NodeCreationService;
 use Symfony\Component\Yaml\Yaml;
 
 require dirname(__DIR__, 2) . '/vendor/autoload.php';
-require __DIR__ . '/LocalDemoCatalog.php';
 
 $app = require dirname(__DIR__, 2) . '/bootstrap/app.php';
 /** @var Kernel $kernel */
@@ -32,9 +31,10 @@ $memory = (int) env('LOCAL_WINGS_NODE_MEMORY', 16384);
 $disk = (int) env('LOCAL_WINGS_NODE_DISK', 102400);
 $uploadSize = (int) env('LOCAL_WINGS_UPLOAD_SIZE', 100);
 $allocationIp = trim((string) env('LOCAL_WINGS_ALLOCATION_IP', '127.0.0.1'));
+$defaultAllocationPorts = array_map(static fn (int $port): string => (string) $port, range(25565, 25581));
 $allocationPorts = array_values(array_filter(array_map(
     static fn (string $port): string => trim($port),
-    explode(',', (string) env('LOCAL_WINGS_ALLOCATION_PORTS', implode(',', localDemoDefaultCatalog()['allocation_ports'])))
+    explode(',', (string) env('LOCAL_WINGS_ALLOCATION_PORTS', implode(',', $defaultAllocationPorts)))
 )));
 $panelUrl = trim((string) env('LOCAL_WINGS_PANEL_URL', 'http://panel.local.proxy'));
 $allowedOrigin = trim((string) env('LOCAL_WINGS_ALLOWED_ORIGIN', $panelUrl));

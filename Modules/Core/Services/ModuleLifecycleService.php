@@ -112,7 +112,7 @@ class ModuleLifecycleService implements ModuleLifecycleServiceInterface
         );
 
         return new ModuleLifecycleResult(
-            module: $module->refresh(),
+            module: $operation->operation === ModuleAction::Delete ? $module : $module->refresh(),
             operation: $operation->refresh(),
         );
     }
@@ -137,6 +137,7 @@ class ModuleLifecycleService implements ModuleLifecycleServiceInterface
             ModuleAction::Update => DB::transaction(fn () => $this->updateModule($manifest)),
             ModuleAction::Enable => DB::transaction(fn () => $this->enableModule($manifest)),
             ModuleAction::Disable => DB::transaction(fn () => $this->disableModule($manifest)),
+            ModuleAction::Delete => DB::transaction(fn () => $this->deleteModule($manifest)),
             ModuleAction::RebuildRegistry => DB::transaction(function () use ($manifest): CoreModule {
                 $module = $this->syncModuleState($manifest);
 
@@ -194,6 +195,33 @@ class ModuleLifecycleService implements ModuleLifecycleServiceInterface
         $this->runtimeExecutor->disable($manifest);
 
         $module = $this->states->upsertFromManifest($manifest, ModuleState::Disabled);
+
+        if ($manifest->hasFrontend) {
+            $this->syncFrontendArtifacts();
+        }
+
+        return $module;
+    }
+
+    private function deleteModule(\Modules\Core\Data\ModuleManifestData $manifest): CoreModule
+    {
+        $module = $this->states->findBySlug($manifest->slug)
+            ?? new CoreModule([
+                'slug' => $manifest->slug,
+                'name' => $manifest->name,
+                'version' => $manifest->version,
+                'description' => $manifest->description,
+                'priority' => $manifest->priority,
+                'state' => ModuleState::Discovered,
+                'is_protected' => $manifest->isProtected,
+                'has_frontend' => $manifest->hasFrontend,
+                'panel_constraint' => $manifest->panelConstraint,
+                'core_api_constraint' => $manifest->coreApiConstraint,
+                'manifest_path' => $manifest->path,
+            ]);
+
+        $this->runtimeExecutor->delete($manifest);
+        $this->states->deleteBySlug($manifest->slug);
 
         if ($manifest->hasFrontend) {
             $this->syncFrontendArtifacts();
@@ -264,11 +292,13 @@ class ModuleLifecycleService implements ModuleLifecycleServiceInterface
             $steps[] = $this->step('update', 'Run module update lifecycle');
         } elseif (in_array($action, [ModuleAction::Enable, ModuleAction::Disable], true)) {
             $steps[] = $this->step('activator', $action === ModuleAction::Enable ? 'Enable module activator' : 'Disable module activator');
+        } elseif ($action === ModuleAction::Delete) {
+            $steps[] = $this->step('delete', 'Delete module files and activator state');
         } elseif ($action === ModuleAction::RebuildRegistry) {
             $steps[] = $this->step('registry', 'Rebuild frontend registry');
         }
 
-        $steps[] = $this->step('state', 'Persist module state');
+        $steps[] = $this->step('state', $action === ModuleAction::Delete ? 'Remove persisted module state' : 'Persist module state');
 
         return $steps;
     }

@@ -10,6 +10,7 @@ Key points:
 - Production startup does **not** run `migrate:fresh`, `db:wipe`, or local Wings setup.
 - Existing production `wings` should remain external to this stack.
 - The production stack shares `/app/storage/app` between `panel`, `queue`, `scheduler`, and `init`, which is required for queue-driven module archive imports and other local-disk runtime artifacts.
+- The production stack also shares `/app/Modules` between containers, so imported modules persist and stay visible to `panel`, `queue`, `scheduler`, and `init`.
 
 ## Stack Layout
 
@@ -132,12 +133,30 @@ The production image is intentionally built so that:
 - it does not require `.env.example` to be deployed
 - it does not depend on live Redis during `composer install`
 - it does not need `public/storage` inside the Docker build context
+- it seeds built-in modules like `Core` from the image into the shared `/app/Modules` volume on container startup
 
 That means PhpStorm or rsync deployments can safely exclude:
 
 - `.env.example`
 - `public/storage`
 - local development directories
+
+## Where Imported Modules Live
+
+In production, imported modules are not written back into your Git checkout on the host.
+
+They are stored inside the named Docker volume mounted at `/app/Modules`:
+
+- this keeps module installs persistent across container recreation
+- this lets `panel`, `queue`, and `scheduler` all see the same module code
+- this avoids mounting the entire application root as writable runtime state
+
+To inspect imported modules:
+
+```bash
+docker exec panel ls -la /app/Modules
+docker volume inspect pterodactyl-modules
+```
 
 ## Do Not Run In Production
 

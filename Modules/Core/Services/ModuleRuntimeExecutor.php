@@ -51,6 +51,12 @@ class ModuleRuntimeExecutor implements ModuleRuntimeExecutorInterface
         $this->container->forgetInstance(ModuleRepositoryInterface::class);
         $this->container->forgetInstance('modules');
 
-        return $this->container->make(ModuleRepositoryInterface::class);
+        $modules = $this->container->make(ModuleRepositoryInterface::class);
+
+        if (method_exists($modules, 'resetModules')) {
+            $modules->resetModules();
+        }
+
+        return $modules;
     }
 }

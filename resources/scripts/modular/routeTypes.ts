@@ -11,6 +11,7 @@ export interface RouteDefinition {
 
 export interface ServerRouteDefinition extends RouteDefinition {
     permission: string | string[] | null;
+    visible?: (context: ServerRouteVisibilityContext) => boolean;
 }
 
 export interface RouteRegistry {
@@ -26,6 +27,10 @@ export interface ModuleRouteDefinition {
 
 export interface ModuleServerRouteDefinition extends ModuleRouteDefinition {
     permission?: string | string[] | null;
+}
+
+export interface ServerRouteVisibilityContext {
+    server: Server;
 }
 
 export interface ModuleFrontendRegistryModule {
@@ -45,13 +50,25 @@ export interface ModularFrontendRegistryPayload {
 
 export type ModuleRouteComponentMap = Record<string, ComponentType>;
 
+export interface ModuleAccountRouteComponentDefinition {
+    component: ComponentType;
+}
+
+export interface ModuleServerRouteComponentDefinition {
+    component: ComponentType;
+    visible?: (context: ServerRouteVisibilityContext) => boolean;
+}
+
+export type ModuleAccountRouteComponentEntry = ComponentType | ModuleAccountRouteComponentDefinition;
+export type ModuleServerRouteComponentEntry = ComponentType | ModuleServerRouteComponentDefinition;
+
 export interface ModuleDashboardComponentRegistry {
     serverList?: ComponentType<DashboardServerListProps>;
 }
 
 export interface ModuleRouteComponentRegistry {
-    account?: ModuleRouteComponentMap;
-    server?: ModuleRouteComponentMap;
+    account?: Record<string, ModuleAccountRouteComponentEntry>;
+    server?: Record<string, ModuleServerRouteComponentEntry>;
     dashboard?: ModuleDashboardComponentRegistry;
 }
 

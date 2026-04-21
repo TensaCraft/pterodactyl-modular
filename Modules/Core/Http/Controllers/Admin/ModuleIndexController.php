@@ -74,6 +74,7 @@ class ModuleIndexController extends Controller
                 'canEnable' => in_array($state, [ModuleState::Installed, ModuleState::Disabled], true),
                 'canUpdate' => in_array($state, [ModuleState::Installed, ModuleState::Enabled, ModuleState::Disabled], true),
                 'canDisable' => ! $manifest->isProtected && $state === ModuleState::Enabled,
+                'canDelete' => ! $manifest->isProtected,
                 'canRebuild' => $state !== ModuleState::Discovered,
             ];
         })->values();

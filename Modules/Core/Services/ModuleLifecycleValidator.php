@@ -27,6 +27,11 @@ class ModuleLifecycleValidator implements ModuleLifecycleValidatorInterface
             $this->assertNoEnabledDependents($manifest);
         }
 
+        if ($action === ModuleAction::Delete) {
+            $this->assertProtectedCoreCanBeDisabled($manifest);
+            $this->assertNoEnabledDependents($manifest);
+        }
+
         if ($action === ModuleAction::Enable) {
             $this->assertDependenciesAreEnabled($manifest);
         }

@@ -10,6 +10,8 @@ interface ModuleRuntimeExecutorInterface
 
     public function disable(ModuleManifestData $manifest): void;
 
+    public function delete(ModuleManifestData $manifest): void;
+
     public function install(ModuleManifestData $manifest): void;
 
     public function update(ModuleManifestData $manifest): void;

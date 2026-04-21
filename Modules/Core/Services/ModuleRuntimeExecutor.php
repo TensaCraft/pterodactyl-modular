@@ -25,6 +25,20 @@ class ModuleRuntimeExecutor implements ModuleRuntimeExecutorInterface
         $this->resolveModules()->disable($manifest->name);
     }
 
+    public function delete(ModuleManifestData $manifest): void
+    {
+        $modules = $this->resolveModules();
+        $modules->delete($manifest->name);
+
+        if (method_exists($modules, 'resetModules')) {
+            $modules->resetModules();
+        }
+
+        $this->container->forgetInstance(ActivatorInterface::class);
+        $this->container->forgetInstance(ModuleRepositoryInterface::class);
+        $this->container->forgetInstance('modules');
+    }
+
     public function install(ModuleManifestData $manifest): void
     {
         $migrationPath = $manifest->path . DIRECTORY_SEPARATOR . 'Database' . DIRECTORY_SEPARATOR . 'Migrations';

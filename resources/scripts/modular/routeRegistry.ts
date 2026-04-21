@@ -3,9 +3,11 @@ import discoveredModuleRouteComponents from './discoverModuleRouteComponents';
 import mergeRouteDefinitions from './mergeRouteDefinitions';
 import { ScreenPlaceholder } from './ScreenPlaceholder';
 import type {
+    ModuleAccountRouteComponentEntry,
     ModuleFrontendRegistryModule,
     ModuleRouteComponentRegistries,
     ModularFrontendRegistryPayload,
+    ModuleServerRouteComponentEntry,
     RouteDefinition,
     RouteRegistry,
     ServerRouteDefinition,
@@ -58,15 +60,74 @@ const normalizeServerPath = (path: string) => {
     return path;
 };
 
-const resolveComponent = (
+const resolveRouteEntry = <TEntry extends ModuleAccountRouteComponentEntry | ModuleServerRouteComponentEntry>(
     slug: string,
     routeType: 'account' | 'server',
     rawPath: string,
     localPath: string,
     modules: ModuleRouteComponentRegistries
-) => {
+): TEntry | undefined => {
     const componentRegistry = modules[slug]?.[routeType];
-    return componentRegistry?.[rawPath] ?? componentRegistry?.[localPath] ?? ScreenPlaceholder;
+
+    return componentRegistry?.[rawPath] as TEntry | undefined
+        ?? componentRegistry?.[localPath] as TEntry | undefined;
+};
+
+const isWrappedAccountRouteEntry = (
+    entry: ModuleAccountRouteComponentEntry | undefined
+): entry is { component: RouteDefinition['component'] } => {
+    return typeof entry === 'object' && entry !== null && 'component' in entry;
+};
+
+const isWrappedServerRouteEntry = (
+    entry: ModuleServerRouteComponentEntry | undefined
+): entry is { component: RouteDefinition['component']; visible?: ServerRouteDefinition['visible'] } => {
+    return typeof entry === 'object' && entry !== null && 'component' in entry;
+};
+
+const resolveAccountComponent = (
+    slug: string,
+    rawPath: string,
+    localPath: string,
+    modules: ModuleRouteComponentRegistries
+) => {
+    const entry = resolveRouteEntry<ModuleAccountRouteComponentEntry>(slug, 'account', rawPath, localPath, modules);
+
+    if (!entry) {
+        return ScreenPlaceholder;
+    }
+
+    return isWrappedAccountRouteEntry(entry) ? entry.component : entry;
+};
+
+const resolveServerComponent = (
+    slug: string,
+    rawPath: string,
+    localPath: string,
+    modules: ModuleRouteComponentRegistries
+) => {
+    const entry = resolveRouteEntry<ModuleServerRouteComponentEntry>(slug, 'server', rawPath, localPath, modules);
+
+    if (!entry) {
+        return ScreenPlaceholder;
+    }
+
+    return isWrappedServerRouteEntry(entry) ? entry.component : entry;
+};
+
+const resolveServerVisibility = (
+    slug: string,
+    rawPath: string,
+    localPath: string,
+    modules: ModuleRouteComponentRegistries
+) => {
+    const entry = resolveRouteEntry<ModuleServerRouteComponentEntry>(slug, 'server', rawPath, localPath, modules);
+
+    if (!entry || !isWrappedServerRouteEntry(entry)) {
+        return undefined;
+    }
+
+    return entry.visible;
 };
 
 const buildAccountRoutes = (
@@ -83,7 +144,7 @@ const buildAccountRoutes = (
                 path,
                 name: route.name ?? undefined,
                 exact: route.exact,
-                component: resolveComponent(module.slug, 'account', route.path, path, moduleRouteComponents),
+                component: resolveAccountComponent(module.slug, route.path, path, moduleRouteComponents),
             });
         });
     });
@@ -106,7 +167,8 @@ const buildServerRoutes = (
                 name: route.name ?? undefined,
                 exact: route.exact,
                 permission: route.permission ?? null,
-                component: resolveComponent(module.slug, 'server', route.path, path, moduleRouteComponents),
+                visible: resolveServerVisibility(module.slug, route.path, path, moduleRouteComponents),
+                component: resolveServerComponent(module.slug, route.path, path, moduleRouteComponents),
             });
         });
     });

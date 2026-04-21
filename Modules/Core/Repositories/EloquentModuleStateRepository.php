@@ -41,4 +41,9 @@ class EloquentModuleStateRepository implements ModuleStateRepositoryInterface
             ->keyBy('slug')
             ->all();
     }
+
+    public function deleteBySlug(string $slug): void
+    {
+        CoreModule::query()->where('slug', $slug)->delete();
+    }
 }

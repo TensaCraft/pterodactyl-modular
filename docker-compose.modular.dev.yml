@@ -19,7 +19,7 @@ x-modular-environment: &modular-environment
   DB_DATABASE: ${DB_DATABASE:?Set DB_DATABASE for the modular dev stack}
   DB_USERNAME: ${DB_USERNAME:?Set DB_USERNAME for the modular dev stack}
   DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD for the modular dev stack}
-  REDIS_HOST: ${REDIS_HOST:-redis}
+  REDIS_HOST: ${REDIS_HOST:?Set REDIS_HOST for the modular dev stack}
   REDIS_PORT: ${REDIS_PORT:-6379}
   REDIS_PASSWORD: ${REDIS_PASSWORD:?Set REDIS_PASSWORD for the modular dev stack}
   HASHIDS_LENGTH: ${HASHIDS_LENGTH:-8}
@@ -51,6 +51,19 @@ services:
       context: .
       dockerfile: .docker/panel/Dockerfile
     command: ["/bin/ash", ".docker/panel/start-panel.sh"]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-tensa-dev}-panel.entrypoints=http"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-tensa-dev}-panel.rule=Host(`${PANEL_DOMAIN:-panel.local.proxy}`)"
+      - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME:-tensa-dev}-panel-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-tensa-dev}-panel.middlewares=${COMPOSE_PROJECT_NAME:-tensa-dev}-panel-https-redirect"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-tensa-dev}-panel-secure.entrypoints=https"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-tensa-dev}-panel-secure.rule=Host(`${PANEL_DOMAIN:-panel.local.proxy}`)"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-tensa-dev}-panel-secure.tls=true"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-tensa-dev}-panel-secure.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME:-tensa-dev}-panel-secure.service=${COMPOSE_PROJECT_NAME:-tensa-dev}-panel-svc"
+      - "traefik.http.services.${COMPOSE_PROJECT_NAME:-tensa-dev}-panel-svc.loadbalancer.server.port=80"
+      - "traefik.docker.network=${PROXY_NETWORK:-proxy}"
     volumes:
       - ./:/app
       - pterodactyl-dev-var:/app/var
@@ -134,9 +147,10 @@ services:
           - wings
           - pterodactyl-wings
 
-  local-redis:
+  redis_local:
     image: redis:7-alpine
-    container_name: tensa-dev-redis
+    container_name: tensa-dev-redis-local
+    profiles: ["redis-local"]
     restart: unless-stopped
     command:
       - redis-server
@@ -147,7 +161,7 @@ services:
     networks:
       default:
         aliases:
-          - redis
+          - redis_local
 
 volumes:
   pterodactyl-dev-var:
@@ -161,4 +175,4 @@ volumes:
 networks:
   shared-services:
     external: true
-    name: ${MODULAR_SHARED_NETWORK:-proxy}
+    name: ${PROXY_NETWORK:-proxy}

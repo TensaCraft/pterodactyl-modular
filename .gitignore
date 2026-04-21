@@ -22,16 +22,9 @@ public/assets/manifest.json
 # Remove if we ever put the Dockerfile in the repo
 .dockerignore
 docker-compose.*
+!docker-compose.yml
 !docker-compose.example.yml
 !docker-compose.example.yaml
-!docker-compose.modular.prod.yml
-!docker-compose.modular.dev.yml
-!docker-compose.modular.prod.direct.yml
-!docker-compose.modular.prod.traefik.yml
-!docker-compose.modular.prod.npm.yml
-!docker-compose.modular.dev.direct.yml
-!docker-compose.modular.dev.traefik.yml
-!docker-compose.modular.dev.npm.yml
 
 # for image related files
 misc

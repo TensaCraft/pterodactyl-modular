@@ -123,6 +123,9 @@ jobs:
         if: ${{ steps.track_filter.outputs.enabled == 'true' && steps.replay.outputs.replay_status == 'applied' && (github.event_name != 'workflow_dispatch' || inputs.run_verification != 'false') }}
         env:
           APP_ENV: testing
+          APP_KEY: base64:dGVzdGluZy10ZXN0aW5nLXRlc3RpbmctdGVzdGluZy10ZXN0IQ==
+          APP_URL: http://panel.test
+          HASHIDS_SALT: testing-hashids-salt
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1
           DB_PORT: 3306

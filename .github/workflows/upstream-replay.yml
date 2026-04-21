@@ -208,5 +208,28 @@ jobs:
           '
 
       - name: Fail on replay or verification errors
-        if: ${{ steps.track_filter.outputs.enabled == 'true' && (steps.replay.outputs.replay_status != 'applied' || (steps.verify.outcome != 'success' && !(github.event_name == 'workflow_dispatch' && inputs.run_verification == 'false'))) }}
+        if: >-
+          ${{
+            steps.track_filter.outputs.enabled == 'true' &&
+            (
+              (
+                github.event_name != 'workflow_dispatch' &&
+                matrix.track == 'release-v1-12-2'
+              ) ||
+              (
+                github.event_name == 'workflow_dispatch' &&
+                (
+                  inputs.track == '' ||
+                  inputs.track == matrix.track
+                )
+              )
+            ) &&
+            (
+              steps.replay.outputs.replay_status != 'applied' ||
+              (
+                steps.verify.outcome != 'success' &&
+                !(github.event_name == 'workflow_dispatch' && inputs.run_verification == 'false')
+              )
+            )
+          }}
         run: exit 1

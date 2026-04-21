@@ -2,7 +2,6 @@
 
 namespace Modules\Core\Support\Discovery;
 
-use Composer\Semver\Semver;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
 use InvalidArgumentException;
@@ -12,6 +11,10 @@ use Modules\Core\Data\ModuleManifestData;
 
 class ModuleManifestParser implements ModuleManifestParserInterface
 {
+    public function __construct(private readonly VersionConstraintEvaluator $constraints)
+    {
+    }
+
     public function parse(string $path): ModuleManifestData
     {
         $manifestPath = rtrim($path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'module.json';
@@ -75,7 +78,7 @@ class ModuleManifestParser implements ModuleManifestParserInterface
         $panelVersion = (string) config('app.version', '0.0.0');
         $coreApiVersion = (string) config('modular.core.api_version', '1.0.0');
 
-        if ($manifest->panelConstraint !== '*' && ! Semver::satisfies($panelVersion, $manifest->panelConstraint)) {
+        if ($manifest->panelConstraint !== '*' && ! $this->constraints->satisfies($panelVersion, $manifest->panelConstraint)) {
             throw new InvalidArgumentException(sprintf(
                 'Module [%s] requires panel version [%s], current version is [%s].',
                 $manifest->slug,
@@ -84,7 +87,7 @@ class ModuleManifestParser implements ModuleManifestParserInterface
             ));
         }
 
-        if ($manifest->coreApiConstraint !== '*' && ! Semver::satisfies($coreApiVersion, $manifest->coreApiConstraint)) {
+        if ($manifest->coreApiConstraint !== '*' && ! $this->constraints->satisfies($coreApiVersion, $manifest->coreApiConstraint)) {
             throw new InvalidArgumentException(sprintf(
                 'Module [%s] requires Core API version [%s], current version is [%s].',
                 $manifest->slug,

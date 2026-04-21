@@ -1,0 +1,14 @@
+.git
+.github
+.idea
+.vscode
+.codex
+.tools
+docs
+tests
+node_modules
+vendor
+var
+.env
+.env.ci
+public/storage

@@ -17,4 +17,6 @@ interface ModuleStateRepositoryInterface
      * @return array<string, CoreModule>
      */
     public function allBySlugs(array $slugs): array;
+
+    public function deleteBySlug(string $slug): void;
 }

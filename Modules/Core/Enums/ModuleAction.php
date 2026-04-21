@@ -8,6 +8,7 @@ enum ModuleAction: string
     case Update = 'update';
     case Enable = 'enable';
     case Disable = 'disable';
+    case Delete = 'delete';
     case RebuildRegistry = 'rebuild-registry';
     case ImportArchive = 'import-archive';
     case ImportGit = 'import-git';

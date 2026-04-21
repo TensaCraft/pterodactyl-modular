@@ -1,0 +1,36 @@
+services:
+  init:
+    networks:
+      default: {}
+      proxy: {}
+
+  panel:
+    networks:
+      default: {}
+      proxy:
+        aliases:
+          - panel
+          - pterodactyl-panel
+
+  queue:
+    networks:
+      default: {}
+      proxy: {}
+
+  scheduler:
+    networks:
+      default: {}
+      proxy: {}
+
+  wings:
+    networks:
+      default: {}
+      proxy:
+        aliases:
+          - wings
+          - pterodactyl-wings
+
+networks:
+  proxy:
+    external: true
+    name: ${PROXY_NETWORK:-proxy}

@@ -1,4 +1,9 @@
 services:
+  init:
+    networks:
+      default: {}
+      proxy: {}
+
   panel:
     labels:
       - "traefik.enable=true"
@@ -19,6 +24,24 @@ services:
         aliases:
           - panel
           - pterodactyl-panel
+
+  queue:
+    networks:
+      default: {}
+      proxy: {}
+
+  scheduler:
+    networks:
+      default: {}
+      proxy: {}
+
+  wings:
+    networks:
+      default: {}
+      proxy:
+        aliases:
+          - wings
+          - pterodactyl-wings
 
 networks:
   proxy:

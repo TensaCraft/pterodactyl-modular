@@ -1,5 +1,6 @@
 import coreRoutes from '@/routers/routes';
 import discoveredModuleRouteComponents from './discoverModuleRouteComponents';
+import { getFrontendModules } from './frontendRegistry';
 import mergeRouteDefinitions from './mergeRouteDefinitions';
 import { ScreenPlaceholder } from './ScreenPlaceholder';
 import type {
@@ -18,20 +19,6 @@ const generatedRoutes = discoveredModuleRouteComponents as ModuleRouteComponentR
 const accountPrefixes = ['/account'];
 const authPrefixes = ['/auth'];
 const serverPrefixes = ['/server/:id', '/server/{server}', '/servers/{server}', '/servers/:server'];
-
-const isBrowser = typeof window !== 'undefined';
-
-const getFrontendModules = (frontendRegistry?: ModularFrontendRegistryPayload): ModuleFrontendRegistryModule[] => {
-    if (frontendRegistry?.modules) {
-        return frontendRegistry.modules.filter((module) => module.has_frontend);
-    }
-
-    if (!isBrowser || !window.ModularFrontendRegistry?.modules) {
-        return [];
-    }
-
-    return window.ModularFrontendRegistry.modules.filter((module) => module.has_frontend);
-};
 
 const normalizeAccountPath = (path: string) => {
     for (const prefix of accountPrefixes) {

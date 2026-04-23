@@ -1,25 +1,12 @@
 import discoveredModuleRouteComponents from './discoverModuleRouteComponents';
+import { getFrontendModules } from './frontendRegistry';
 import type {
     DashboardExtensionRegistry,
-    ModuleFrontendRegistryModule,
     ModuleRouteComponentRegistries,
     ModularFrontendRegistryPayload,
 } from './routeTypes';
 
 const generatedRoutes = discoveredModuleRouteComponents as ModuleRouteComponentRegistries;
-const isBrowser = typeof window !== 'undefined';
-
-const getFrontendModules = (frontendRegistry?: ModularFrontendRegistryPayload): ModuleFrontendRegistryModule[] => {
-    if (frontendRegistry?.modules) {
-        return frontendRegistry.modules.filter((module) => module.has_frontend);
-    }
-
-    if (!isBrowser || !window.ModularFrontendRegistry?.modules) {
-        return [];
-    }
-
-    return window.ModularFrontendRegistry.modules.filter((module) => module.has_frontend);
-};
 
 export const buildDashboardExtensionRegistry = (
     frontendRegistry?: ModularFrontendRegistryPayload,

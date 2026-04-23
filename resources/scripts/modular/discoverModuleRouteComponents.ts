@@ -5,15 +5,23 @@ type ModuleRoutesModule = {
     slug?: string;
 };
 
-type OptionalWebpackRequire = NodeRequire & {
-    context?: __WebpackModuleApi.RequireContext;
+declare const require: NodeRequire & {
+    context?: (
+        path: string,
+        deep?: boolean,
+        filter?: RegExp
+    ) => __WebpackModuleApi.RequireContext;
 };
 
-const routesContext = (require as OptionalWebpackRequire).context?.(
-    '../../../Modules',
-    true,
-    /Resources\/scripts\/(?:modular\/)?routes\.tsx?$/
-) ?? null;
+const loadRoutesContext = (): __WebpackModuleApi.RequireContext | null => {
+    try {
+        return require.context('../../../Modules', true, /Resources\/scripts\/(?:modular\/)?routes\.tsx?$/);
+    } catch {
+        return null;
+    }
+};
+
+const routesContext = loadRoutesContext();
 
 const pascalCaseToKebabCase = (value: string) =>
     value

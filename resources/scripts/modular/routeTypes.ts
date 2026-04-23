@@ -15,6 +15,7 @@ export interface ServerRouteDefinition extends RouteDefinition {
 }
 
 export interface RouteRegistry {
+    auth: RouteDefinition[];
     account: RouteDefinition[];
     server: ServerRouteDefinition[];
 }
@@ -39,6 +40,7 @@ export interface ModuleFrontendRegistryModule {
     entrypoint: string | null;
     zones: string[];
     routes?: {
+        auth?: ModuleRouteDefinition[];
         account?: ModuleRouteDefinition[];
         server?: ModuleServerRouteDefinition[];
     };
@@ -66,16 +68,26 @@ export interface ModuleDashboardComponentRegistry {
     serverList?: ComponentType<DashboardServerListProps>;
 }
 
+export interface ModuleAuthUiComponentRegistry {
+    loginActions?: ComponentType;
+}
+
 export interface ModuleRouteComponentRegistry {
+    auth?: Record<string, ModuleAccountRouteComponentEntry>;
     account?: Record<string, ModuleAccountRouteComponentEntry>;
     server?: Record<string, ModuleServerRouteComponentEntry>;
     dashboard?: ModuleDashboardComponentRegistry;
+    authUi?: ModuleAuthUiComponentRegistry;
 }
 
 export type ModuleRouteComponentRegistries = Record<string, ModuleRouteComponentRegistry>;
 
 export interface DashboardExtensionRegistry {
     serverList?: ComponentType<DashboardServerListProps>;
+}
+
+export interface AuthUiExtensionRegistry {
+    loginActions: ComponentType[];
 }
 
 export interface DashboardServerListProps {

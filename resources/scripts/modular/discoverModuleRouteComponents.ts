@@ -5,7 +5,15 @@ type ModuleRoutesModule = {
     slug?: string;
 };
 
-const routesContext = require.context('../../../Modules', true, /Resources\/scripts\/routes\.tsx?$/);
+type OptionalWebpackRequire = NodeRequire & {
+    context?: __WebpackModuleApi.RequireContext;
+};
+
+const routesContext = (require as OptionalWebpackRequire).context?.(
+    '../../../Modules',
+    true,
+    /Resources\/scripts\/(?:modular\/)?routes\.tsx?$/
+) ?? null;
 
 const pascalCaseToKebabCase = (value: string) =>
     value
@@ -14,7 +22,7 @@ const pascalCaseToKebabCase = (value: string) =>
         .toLowerCase();
 
 const deriveSlugFromContextKey = (key: string): string | null => {
-    const match = key.match(/^\.\/([^/]+)\/Resources\/scripts\/routes\.tsx?$/);
+    const match = key.match(/^\.\/([^/]+)\/Resources\/scripts\/(?:modular\/)?routes\.tsx?$/);
 
     if (!match) {
         return null;
@@ -25,6 +33,10 @@ const deriveSlugFromContextKey = (key: string): string | null => {
 
 const discoverModuleRouteComponents = (): ModuleRouteComponentRegistries => {
     const registries: ModuleRouteComponentRegistries = {};
+
+    if (!routesContext) {
+        return registries;
+    }
 
     routesContext.keys().forEach((key) => {
         const moduleDefinition = routesContext(key) as ModuleRoutesModule;

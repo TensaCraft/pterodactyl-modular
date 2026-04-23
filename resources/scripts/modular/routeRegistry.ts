@@ -16,6 +16,7 @@ import type {
 const generatedRoutes = discoveredModuleRouteComponents as ModuleRouteComponentRegistries;
 
 const accountPrefixes = ['/account'];
+const authPrefixes = ['/auth'];
 const serverPrefixes = ['/server/:id', '/server/{server}', '/servers/{server}', '/servers/:server'];
 
 const isBrowser = typeof window !== 'undefined';
@@ -46,6 +47,20 @@ const normalizeAccountPath = (path: string) => {
     return path;
 };
 
+const normalizeAuthPath = (path: string) => {
+    for (const prefix of authPrefixes) {
+        if (path === prefix) {
+            return '/';
+        }
+
+        if (path.startsWith(`${prefix}/`)) {
+            return path.slice(prefix.length) || '/';
+        }
+    }
+
+    return path;
+};
+
 const normalizeServerPath = (path: string) => {
     for (const prefix of serverPrefixes) {
         if (path === prefix) {
@@ -62,7 +77,7 @@ const normalizeServerPath = (path: string) => {
 
 const resolveRouteEntry = <TEntry extends ModuleAccountRouteComponentEntry | ModuleServerRouteComponentEntry>(
     slug: string,
-    routeType: 'account' | 'server',
+    routeType: 'auth' | 'account' | 'server',
     rawPath: string,
     localPath: string,
     modules: ModuleRouteComponentRegistries
@@ -92,6 +107,21 @@ const resolveAccountComponent = (
     modules: ModuleRouteComponentRegistries
 ) => {
     const entry = resolveRouteEntry<ModuleAccountRouteComponentEntry>(slug, 'account', rawPath, localPath, modules);
+
+    if (!entry) {
+        return ScreenPlaceholder;
+    }
+
+    return isWrappedAccountRouteEntry(entry) ? entry.component : entry;
+};
+
+const resolveAuthComponent = (
+    slug: string,
+    rawPath: string,
+    localPath: string,
+    modules: ModuleRouteComponentRegistries
+) => {
+    const entry = resolveRouteEntry<ModuleAccountRouteComponentEntry>(slug, 'auth', rawPath, localPath, modules);
 
     if (!entry) {
         return ScreenPlaceholder;
@@ -152,6 +182,28 @@ const buildAccountRoutes = (
     return routes;
 };
 
+const buildAuthRoutes = (
+    modules: ModuleFrontendRegistryModule[],
+    moduleRouteComponents: ModuleRouteComponentRegistries
+): RouteDefinition[] => {
+    const routes: RouteDefinition[] = [];
+
+    modules.forEach((module) => {
+        module.routes?.auth?.forEach((route) => {
+            const path = normalizeAuthPath(route.path);
+
+            routes.push({
+                path,
+                name: route.name ?? undefined,
+                exact: route.exact,
+                component: resolveAuthComponent(module.slug, route.path, path, moduleRouteComponents),
+            });
+        });
+    });
+
+    return routes;
+};
+
 const buildServerRoutes = (
     modules: ModuleFrontendRegistryModule[],
     moduleRouteComponents: ModuleRouteComponentRegistries
@@ -183,6 +235,7 @@ export const buildRouteRegistry = (
     const modules = getFrontendModules(frontendRegistry);
 
     return {
+        auth: buildAuthRoutes(modules, moduleRouteComponents),
         account: mergeRouteDefinitions(coreRoutes.account, buildAccountRoutes(modules, moduleRouteComponents)),
         server: mergeRouteDefinitions(coreRoutes.server, buildServerRoutes(modules, moduleRouteComponents)),
     };

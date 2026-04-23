@@ -10,6 +10,7 @@ import tw from 'twin.macro';
 import Button from '@/components/elements/Button';
 import Reaptcha from 'reaptcha';
 import useFlash from '@/plugins/useFlash';
+import authUiRegistry from '@/modular/authUiRegistry';
 
 interface Values {
     username: string;
@@ -22,6 +23,7 @@ const LoginContainer = ({ history }: RouteComponentProps) => {
 
     const { clearFlashes, clearAndAddHttpError } = useFlash();
     const { enabled: recaptchaEnabled, siteKey } = useStoreState((state) => state.settings.data!.recaptcha);
+    const LoginActions = authUiRegistry.loginActions;
 
     useEffect(() => {
         clearFlashes();
@@ -107,6 +109,15 @@ const LoginContainer = ({ history }: RouteComponentProps) => {
                             Forgot password?
                         </Link>
                     </div>
+                    {LoginActions.length > 0 && (
+                        <React.Suspense fallback={null}>
+                            <div css={tw`mt-6 space-y-3`}>
+                                {LoginActions.map((Component, index) => (
+                                    <Component key={index} />
+                                ))}
+                            </div>
+                        </React.Suspense>
+                    )}
                 </LoginFormContainer>
             )}
         </Formik>

@@ -74,7 +74,9 @@ const LoginCheckpointContainer = () => {
 
 const EnhancedForm = withFormik<Props, Values>({
     handleSubmit: ({ code, recoveryCode }, { setSubmitting, props: { clearAndAddHttpError, location } }) => {
-        loginCheckpoint(location.state?.token || '', code, recoveryCode)
+        const token = location.state?.token || new URLSearchParams(location.search).get('token') || '';
+
+        loginCheckpoint(token, code, recoveryCode)
             .then((response) => {
                 if (response.complete) {
                     // @ts-expect-error this is valid
@@ -99,8 +101,9 @@ const EnhancedForm = withFormik<Props, Values>({
 
 export default ({ history, location, ...props }: OwnProps) => {
     const { clearAndAddHttpError } = useFlash();
+    const token = location.state?.token || new URLSearchParams(location.search).get('token');
 
-    if (!location.state?.token) {
+    if (!token) {
         history.replace('/auth/login');
 
         return null;

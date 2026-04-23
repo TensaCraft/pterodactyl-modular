@@ -40,6 +40,7 @@ class ModuleFrontendRegistryBuilder implements FrontendRegistryBuilderInterface
             'entrypoint' => $this->resolveEntrypoint($manifest),
             'zones' => $manifest->frontend['zones'] ?? [],
             'routes' => [
+                'auth' => $this->buildRoutes($manifest, 'auth'),
                 'account' => $this->buildRoutes($manifest, 'account'),
                 'server' => $this->buildRoutes($manifest, 'server'),
             ],

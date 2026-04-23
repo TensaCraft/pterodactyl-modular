@@ -23,6 +23,7 @@ x-modular-environment: &modular-environment
   REDIS_PORT: ${REDIS_PORT:-6379}
   REDIS_PASSWORD: ${REDIS_PASSWORD:?Set REDIS_PASSWORD for the modular dev stack}
   HASHIDS_LENGTH: ${HASHIDS_LENGTH:-8}
+  MAIL_MAILER: log
   LE_EMAIL: ${LE_EMAIL:-}
 
 x-modular-common: &modular-common
@@ -31,6 +32,7 @@ x-modular-common: &modular-common
   environment: *modular-environment
   volumes:
     - ./:/app
+    - ./Modules:/app/Modules
     - pterodactyl-dev-var:/app/var
     - pterodactyl-dev-logs:/app/storage/logs
     - pterodactyl-dev-vendor:/app/vendor
@@ -47,6 +49,7 @@ services:
     command: ["/bin/ash", ".docker/panel/start-panel.sh"]
     volumes:
       - ./:/app
+      - ./Modules:/app/Modules
       - pterodactyl-dev-var:/app/var
       - pterodactyl-dev-logs:/app/storage/logs
       - pterodactyl-dev-vendor:/app/vendor

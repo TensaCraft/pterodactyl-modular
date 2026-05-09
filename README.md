@@ -1,72 +1,121 @@
-[![Logo Image](https://cdn.pterodactyl.io/logos/new/pterodactyl_logo.png)](https://pterodactyl.io)
+# Pterodactyl Modular
 
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/pterodactyl/panel/ci.yaml?label=Tests&style=for-the-badge&branch=1.0-develop)
-![Discord](https://img.shields.io/discord/122900397965705216?label=Discord&logo=Discord&logoColor=white&style=for-the-badge)
-![GitHub Releases](https://img.shields.io/github/downloads/pterodactyl/panel/latest/total?style=for-the-badge)
-![GitHub contributors](https://img.shields.io/github/contributors/pterodactyl/panel?style=for-the-badge)
+Pterodactyl Modular is a maintained fork of the Pterodactyl Panel focused on safe modular extensions, repeatable patching, and production-friendly Docker deployment.
 
-# Pterodactyl Panel
+The goal is to keep the upstream Pterodactyl codebase easy to update while allowing custom features to live in isolated modules. Modules should use the Core module API and the standard Pterodactyl API instead of editing panel files directly.
 
-Pterodactyl® is a free, open-source game server management panel built with PHP, React, and Go. Designed with security
-in mind, Pterodactyl runs all game servers in isolated Docker containers while exposing a beautiful and intuitive
-UI to end users.
+## Project Goals
 
-Stop settling for less. Make game servers a first class citizen on your platform.
+- Keep upstream Pterodactyl updates practical by minimizing direct core changes.
+- Provide a small Core module that exposes reusable APIs for other modules.
+- Support install, enable, disable, rebuild, delete, and log workflows for modules from the admin panel.
+- Keep production deployment reproducible with Docker Compose and explicit environment configuration.
+- Keep local or private modules out of the main Git history.
 
-![Image](https://cdn.pterodactyl.io/site-assets/pterodactyl_v1_demo.gif)
+## What Is Included
 
-## Documentation
+### Core Module
 
-* [Panel Documentation](https://pterodactyl.io/panel/1.0/getting_started.html)
-* [Wings Documentation](https://pterodactyl.io/wings/1.0/installing.html)
-* [Community Guides](https://pterodactyl.io/community/about.html)
-* Or, get additional help [via Discord](https://discord.gg/pterodactyl)
+`Modules/Core` is part of this repository. It provides the base module registry, module lifecycle operations, frontend route integration, and shared APIs used by other modules.
 
-## Sponsors
+### Patch Layer
 
-I would like to extend my sincere thanks to the following sponsors for helping fund Pterodactyl's development.
-[Interested in becoming a sponsor?](https://github.com/sponsors/pterodactyl)
+The repository contains the minimal Pterodactyl changes required to load the modular system. These changes are kept separate from individual module functionality so they can be replayed and reviewed during upstream updates.
 
-| Company                                                                           | About                                                                                                                                                                                                                                           |
-|-----------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [**Aussie Server Hosts**](https://aussieserverhosts.com/)                         | No frills Australian Owned and operated High Performance Server hosting for some of the most demanding games serving Australia and New Zealand.                                                                                                 |
-| [**BisectHosting**](https://www.bisecthosting.com/)                               | BisectHosting provides Minecraft, Valheim and other server hosting services with the highest reliability and lightning fast support since 2012.                                                                                                 |
-| [**MineStrator**](https://minestrator.com/)                                       | Looking for the most highend French hosting company for your minecraft server? More than 24,000 members on our discord trust us. Give us a try!                                                                                                 |
-| [**HostEZ**](https://hostez.io)                                                   | US & EU Rust & Minecraft Hosting. DDoS Protected bare metal, VPS and colocation with low latency, high uptime and maximum availability. EZ!                                                                                                     |
-| [**Blueprint**](https://blueprint.zip/?utm_source=pterodactyl&utm_medium=sponsor) | Create and install Pterodactyl addons and themes with the growing Blueprint framework - the package-manager for Pterodactyl. Use multiple modifications at once without worrying about conflicts and make use of the large extension ecosystem. |
-| [**indifferent broccoli**](https://indifferentbroccoli.com/)                      | indifferent broccoli is a game server hosting and rental company. With us, you get top-notch computer power for your gaming sessions. We destroy lag, latency, and complexity--letting you focus on the fun stuff.                              |
+### Docker Deployment
 
-### Supported Games
+The root `docker-compose.yml` is the production entrypoint. Additional Compose overrides live under `.docker/compose` for proxy and development modes.
 
-Pterodactyl supports a wide variety of games by utilizing Docker containers to isolate each instance. This gives
-you the power to run game servers without bloating machines with a host of additional dependencies.
+Supported deployment modes include:
 
-Some of our core supported games include:
+- Direct panel container deployment.
+- Traefik proxy override.
+- Nginx Proxy Manager compatible override.
+- Development stack with local services when needed.
 
-* Minecraft — including Paper, Sponge, Bungeecord, Waterfall, and more
-* Rust
-* Terraria
-* Teamspeak
-* Mumble
-* Team Fortress 2
-* Counter Strike: Global Offensive
-* Garry's Mod
-* ARK: Survival Evolved
+Runtime data, uploaded modules, generated assets, logs, and local environment files are intentionally ignored.
 
-In addition to our standard nest of supported games, our community is constantly pushing the limits of this software
-and there are plenty more games available provided by the community. Some of these games include:
+## Repository Boundaries
 
-* Factorio
-* San Andreas: MP
-* Pocketmine MP
-* Squad
-* Xonotic
-* Starmade
-* Discord ATLBot, and most other Node.js/Python discord bots
-* [and many more...](https://pterodactyleggs.com)
+Tracked in the main repository:
+
+- Pterodactyl modular patching layer.
+- `Modules/Core`.
+- Docker production and development infrastructure.
+- Documentation and deployment examples.
+- CI and upstream replay workflows.
+
+Not tracked in the main repository:
+
+- Imported runtime modules under `Modules/*`, except `Modules/Core`.
+- Local module source snapshots under `.modules`.
+- `.env` files and secrets.
+- Built frontend assets.
+- Runtime storage, cache, logs, and temporary files.
+
+## Local Module Development
+
+Private modules should be developed and versioned outside the main repository history.
+
+This workspace uses `.modules` as a local Git repository for module source snapshots. The `.modules` directory is ignored by the main repository, but it has its own `.git` directory so module changes can be committed locally without leaking into the panel patch history.
+
+Recommended workflow:
+
+1. Work with the runtime copy in `Modules/<ModuleName>` while testing in the panel.
+2. Copy the finished module changes into `.modules/<ModuleName>`.
+3. Commit module changes inside `.modules`.
+4. Keep main repository commits limited to the Core module, patching layer, Docker infrastructure, and documentation.
+
+## Production Deployment
+
+1. Prepare a production `.env` from `.env.example`.
+2. Keep database, Redis, mail, URL, key, and proxy settings explicit in `.env`.
+3. Render the Compose config before applying changes:
+
+```bash
+docker compose config > /tmp/pterodactyl-modular.compose.rendered.yml
+```
+
+4. Build and start the panel:
+
+```bash
+docker compose build panel
+docker compose up -d panel queue scheduler
+```
+
+5. Run migrations only when intentionally applying panel or module schema updates:
+
+```bash
+docker compose run --rm init
+```
+
+For an existing Pterodactyl installation, back up the database, `.env`, and Wings server data before switching the panel container. Do not run destructive database commands during migration.
+
+## Module Installation
+
+Modules can be imported from archives through the admin module manager. The module manager records operations and exposes recent install, enable, disable, rebuild, delete, and import results.
+
+Module packages should include their own metadata, routes, providers, migrations, views, and frontend resources when needed. A module should not require direct edits to Pterodactyl core files.
+
+## Upstream Updates
+
+This fork is designed around replaying the modular patch layer on top of upstream Pterodactyl. When upstream changes are pulled in:
+
+1. Rebuild dependencies and assets.
+2. Re-run the modular verification checks.
+3. Review patch conflicts manually.
+4. Keep each core patch focused and explainable.
+5. Keep private module changes outside the main repository.
+
+## Upstream Project
+
+This project is based on the Pterodactyl Panel.
+
+- Pterodactyl website: https://pterodactyl.io
+- Upstream repository: https://github.com/pterodactyl/panel
+- Panel documentation: https://pterodactyl.io/panel/1.0/getting_started.html
+- Wings documentation: https://pterodactyl.io/wings/1.0/installing.html
 
 ## License
 
-Pterodactyl® Copyright © 2015 - 2022 Dane Everitt and contributors.
-
-Code released under the [MIT License](./LICENSE.md).
+Pterodactyl is released under the MIT License. This fork follows the same license terms for inherited code. See `LICENSE.md`.

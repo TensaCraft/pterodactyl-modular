@@ -34,6 +34,7 @@ resources/lang/locales.js
 Modules/*
 !Modules/Core/
 !Modules/Core/**
+.modules/
 
 /public/build
 /public/hot

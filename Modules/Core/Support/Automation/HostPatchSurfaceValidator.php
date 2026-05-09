@@ -6,6 +6,21 @@ use Closure;
 
 class HostPatchSurfaceValidator
 {
+    private const IGNORED_PATHS = [
+        'README.md',
+        'docker-compose.yml',
+    ];
+
+    private const IGNORED_PREFIXES = [
+        '.docker/',
+        '.github/',
+        '.tools/',
+        'Modules/',
+        'docs/',
+        'scripts/modular/',
+        'tests/',
+    ];
+
     /**
      * @param Closure(array<int, string>): string $git
      */
@@ -40,7 +55,10 @@ class HostPatchSurfaceValidator
 
         $current = $diff === ''
             ? []
-            : array_values(array_filter(array_map('trim', preg_split('/\R+/', $diff) ?: [])));
+            : array_values(array_filter(
+                array_map('trim', preg_split('/\R+/', $diff) ?: []),
+                static fn (string $path): bool => $path !== '' && ! self::isProjectPath($path),
+            ));
 
         $expected = array_values(array_unique(array_map('strval', $expected)));
         sort($current);
@@ -56,5 +74,22 @@ class HostPatchSurfaceValidator
             'unexpected' => $unexpected,
             'missing' => $missing,
         ];
+    }
+
+    private static function isProjectPath(string $path): bool
+    {
+        $path = str_replace('\\', '/', $path);
+
+        if (in_array($path, self::IGNORED_PATHS, true)) {
+            return true;
+        }
+
+        foreach (self::IGNORED_PREFIXES as $prefix) {
+            if (str_starts_with($path, $prefix)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

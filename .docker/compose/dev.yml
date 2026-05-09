@@ -88,33 +88,7 @@ services:
       INIT_RUN_MIGRATIONS: ${INIT_RUN_MIGRATIONS:-true}
       INIT_REBUILD_MODULE_REGISTRY: ${INIT_REBUILD_MODULE_REGISTRY:-true}
       INIT_SYNC_FRONTEND: ${INIT_SYNC_FRONTEND:-false}
-      INIT_SETUP_LOCAL_WINGS: ${INIT_SETUP_LOCAL_WINGS:-true}
     command: ["/bin/ash", ".docker/panel/start-init.sh"]
-
-  wings:
-    image: ghcr.io/pterodactyl/wings:v1.12.1
-    container_name: ${MODULAR_DEV_WINGS_CONTAINER:-wings-dev}
-    restart: unless-stopped
-    tty: true
-    depends_on:
-      - panel
-    environment:
-      TZ: ${APP_TIMEZONE:-UTC}
-      WINGS_UID: 988
-      WINGS_GID: 988
-      WINGS_USERNAME: pterodactyl
-    ports:
-      - "${WINGS_HTTP_PORT:-8080}:8080"
-      - "${WINGS_SFTP_PORT:-2022}:2022"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /var/lib/docker/containers:/var/lib/docker/containers
-      - ./.docker/wings/etc:/etc/pterodactyl
-      - ${LOCAL_WINGS_HOST_DATA_ROOT:-/var/lib/pterodactyl}:/var/lib/pterodactyl
-      - ./.docker/wings/log:/var/log/pterodactyl
-      - ${LOCAL_WINGS_HOST_TMP_ROOT:-/tmp/pterodactyl}:/tmp/pterodactyl
-      - /etc/ssl/certs:/etc/ssl/certs:ro
-      - ${LOCAL_WINGS_HOST_RUN_ROOT:-/run/wings}:/run/wings
 
   redis_local:
     image: redis:7-alpine

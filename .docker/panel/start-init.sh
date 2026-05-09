@@ -25,11 +25,6 @@ else
   echo "Skipping modular registry rebuild."
 fi
 
-if [ "${INIT_SETUP_LOCAL_WINGS:-false}" = "true" ] && [ -f /app/.docker/local/setup_local_wings.php ]; then
-  echo "Configuring bundled local Wings runtime."
-  php /app/.docker/local/setup_local_wings.php
-fi
-
 if [ "${INIT_SYNC_FRONTEND:-false}" = "true" ]; then
   echo "Synchronizing modular frontend assets."
   php artisan modular:sync-frontend --build

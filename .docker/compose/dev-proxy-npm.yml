@@ -22,14 +22,6 @@ services:
       default: {}
       proxy: {}
 
-  wings:
-    networks:
-      default: {}
-      proxy:
-        aliases:
-          - wings
-          - pterodactyl-wings
-
 networks:
   proxy:
     external: true

@@ -110,7 +110,6 @@ services:
       INIT_RUN_MIGRATIONS: ${INIT_RUN_MIGRATIONS:-true}
       INIT_REBUILD_MODULE_REGISTRY: ${INIT_REBUILD_MODULE_REGISTRY:-true}
       INIT_SYNC_FRONTEND: ${INIT_SYNC_FRONTEND:-false}
-      INIT_SETUP_LOCAL_WINGS: "false"
     command: ["/bin/ash", ".docker/panel/start-init.sh"]
 
 volumes:

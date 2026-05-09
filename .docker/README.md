@@ -7,7 +7,7 @@ Key points:
 - The base stack lives in [`/docker-compose.yml`](/D:/Git/Php/pterodactyl-modular/docker-compose.yml).
 - Proxy and development modes are enabled by Compose overrides in [`/.docker/compose`](/D:/Git/Php/pterodactyl-modular/.docker/compose).
 - Production startup does **not** auto-seed demo data.
-- Production startup does **not** run `migrate:fresh`, `db:wipe`, or local Wings setup.
+- Production startup does **not** run `migrate:fresh`, `db:wipe`, or any bundled Wings setup.
 - Existing production `wings` should remain external to this stack.
 - The production stack shares `/app/storage/app` between `panel`, `queue`, `scheduler`, and `init`, which is required for queue-driven module archive imports and other local-disk runtime artifacts.
 - The production stack also shares `/app/Modules` between containers, so imported modules persist and stay visible to `panel`, `queue`, `scheduler`, and `init`.
@@ -121,7 +121,7 @@ Development mode is enabled by adding [`/.docker/compose/dev.yml`](/D:/Git/Php/p
 Typical dev stack:
 
 ```bash
-docker compose up -d panel queue scheduler wings
+docker compose up -d panel queue scheduler
 ```
 
 Optional local Redis is available through the `redis-local` profile and the `redis_local` service. Use it only if your `.env` points `REDIS_HOST=redis_local`.
@@ -165,7 +165,6 @@ Do not use these against the production database:
 - `php artisan migrate:fresh`
 - `php artisan db:wipe`
 - `php artisan db:seed`
-- local Wings setup scripts in [`/.docker/local`](/D:/Git/Php/pterodactyl-modular/.docker/local)
 - development compose overrides
 
 ## Rollback

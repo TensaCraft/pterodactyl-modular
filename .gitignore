@@ -30,6 +30,11 @@ coverage.xml
 resources/lang/locales.js
 .phpunit.result.cache
 
+# Runtime/imported modules are local deployment artifacts.
+Modules/*
+!Modules/Core/
+!Modules/Core/**
+
 /public/build
 /public/hot
 result
